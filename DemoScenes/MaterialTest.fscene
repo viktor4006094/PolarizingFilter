@@ -1,0 +1,80 @@
+{
+    "version": 2,
+    "scene_unit": 1.0,
+    "camera_speed": 1.0,
+    "lighting_scale": 1.0,
+    "active_camera": "Camera0",
+	"env_map": "photo_studio_01_4k.hdr",
+    "models": [
+        {
+            "file": "DemoSphere.fbx",
+            "name": "DemoSphere0",
+            "material": {
+                "shading_model": "metal_rough"
+            },
+            "instances": [
+                {
+                    "name": "DemoSphere0",
+                    "translation": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "scaling": [
+                        0.0115,
+                        0.0115,
+                        0.0115
+                    ],
+                    "rotation": [
+                        0.0,
+                        -0.0,
+                        -0.0
+                    ]
+                }
+            ]
+        }
+    ],
+	"light_probes": [
+        {
+            "file": "photo_studio_01_4k.hdr",
+            "diff_samples" : 4096,
+            "spec_samples" : 2048,
+            "intensity": [
+                0.4,
+                0.4,
+                0.4
+            ],
+            "pos": [
+                0.0,
+                0.0,
+                0.0
+            ]
+        }
+    ],
+    "cameras": [
+        {
+            "name": "Camera0",
+            "pos": [
+                0.0,
+                0.0,
+                0.950417160987854
+            ],
+            "target": [
+                0.0,
+                0.0,
+                -0.049582839012145999
+            ],
+            "up": [
+                0.0,
+                1.0,
+                0.0
+            ],
+            "focal_length": 21.0,
+            "depth_range": [
+                0.10000000149011612,
+                1000.0
+            ],
+            "aspect_ratio": 1.0
+        }
+    ]
+}

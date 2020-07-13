@@ -136,7 +136,7 @@ void ForwardRenderer::initScene(SampleCallbacks* pSample, Scene::SharedPtr pScen
     mpSceneRenderer = ForwardRendererSceneRenderer::create(pScene);
     mpSceneRenderer->setCameraControllerType(SceneRenderer::CameraControllerType::FirstPerson);
     mpSceneRenderer->toggleStaticMaterialCompilation(mPerMaterialShader);
-    setSceneSampler(mpSceneSampler ? mpSceneSampler->getMaxAnisotropy() : 4);
+    setSceneSampler(mpSceneSampler ? mpSceneSampler->getMaxAnisotropy() : 16);
     setActiveCameraAspectRatio(pSample->getCurrentFbo()->getWidth(), pSample->getCurrentFbo()->getHeight());
     initDepthPass();
     initLightingPass();
@@ -501,6 +501,10 @@ bool ForwardRenderer::onKeyEvent(SampleCallbacks* pSample, const KeyboardEvent& 
             mUseCameraPath = !mUseCameraPath;
             applyCameraPathState();
             return true;
+        //case KeyboardEvent::Key::H: // For running performance tests
+        //    gProfileEnabled = true;
+        //    pSample->freezeTime(false);
+        //    return true;
         case KeyboardEvent::Key::O:
             mPerMaterialShader = !mPerMaterialShader;
             mpSceneRenderer->toggleStaticMaterialCompilation(mPerMaterialShader);

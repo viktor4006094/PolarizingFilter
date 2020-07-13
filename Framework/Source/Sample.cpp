@@ -305,7 +305,7 @@ namespace Falcor
 
     void Sample::calculateTime()
     {
-        if (mFixedTimeDelta > 0.0f)
+        if (!mFreezeTime && mFixedTimeDelta > 0.0f)
         {
             mCurrentTime += mFixedTimeDelta * mTimeScale;
         }

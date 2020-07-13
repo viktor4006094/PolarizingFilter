@@ -524,7 +524,7 @@ namespace Falcor
     bool Gui::addFloatSlider(const char label[], float& var, float minVal, float maxVal, bool sameLine, const char* displayFormat)
     {
         if (sameLine) ImGui::SameLine();
-        bool b = ImGui::SliderFloat(label, &var, minVal, maxVal);
+        bool b = ImGui::SliderFloat(label, &var, minVal, maxVal, displayFormat);
         var = clamp(var, minVal, maxVal);
         return b;
     }
@@ -826,7 +826,7 @@ namespace Falcor
         if (!showTitleBar) flags |= ImGuiWindowFlags_NoTitleBar;
         if (!allowMove)  flags |= ImGuiWindowFlags_NoMove;
         if (!focus) flags |= ImGuiWindowFlags_NoFocusOnAppearing;
-        
+
         ImGui::Begin(label, allowClose ? &mOpenWindows[label] : nullptr, flags);
 
         if (allowClose && !mOpenWindows[label])  ImGui::End();
@@ -1040,4 +1040,47 @@ namespace Falcor
         if (it == mOpenWindows.end()) logWarning(std::string("Gui Window ") + labelString + " does not exist.");
         it->second = isOpen;
     }
+
+    void Gui::addPolarizationArrow(float rotationAngle, float wndWidth, float wndHeight, bool circleOnly, bool black)
+    {
+        ImDrawList* draw_list = ImGui::GetOverlayDrawList();
+
+        const ImU32 col32 = black ? ImColor(0.f, 0.f, 0.f) : ImColor(1.f, 1.f, 1.f);
+        const float scale = 1.5f;
+        const float length = scale * 110.0f;
+        const float width  = scale * 3.0f;
+        const float ts     = scale * 12.0f; // triangle size
+        const ImVec2 mid = ImVec2(wndWidth - 100.f - 50.f * scale, wndHeight - 100.f - 50.f * scale);
+        const float a = -rotationAngle*static_cast<float>(M_PI/180.0);
+
+        auto rotatedVec2 = [&](float vx, float vy) {
+            ImVec2 rotated = ImVec2(vx - mid.x, vy - mid.y);
+            rotated = ImVec2(rotated.x * cos(a) - rotated.y * sin(a), rotated.x * sin(a) + rotated.y * cos(a));
+            rotated = ImVec2(rotated.x + mid.x, rotated.y + mid.y);
+            return rotated;
+        };
+
+        ImVec2 left  = ImVec2(mid.x - 0.5f * length, mid.y);
+        ImVec2 right  = ImVec2(mid.x + 0.5f * length, mid.y);
+        ImVec2 uLeft = ImVec2(left.x - width, left.y);
+        ImVec2 lRight = ImVec2(right.x + width, right.y);
+        ImVec2 rTm = ImVec2(right.x - 0.5f*ts, right.y); // right triangle mid
+        ImVec2 lTm = ImVec2(left.x + 0.5f*ts, left.y); // left triangle mid
+
+        if (!circleOnly) {
+            draw_list->AddQuadFilled(rotatedVec2(left.x, left.y + width),
+                                     rotatedVec2(left.x, left.y - width),
+                                     rotatedVec2(right.x, right.y - width),
+                                     rotatedVec2(right.x, right.y + width), col32);
+            draw_list->AddTriangleFilled(rotatedVec2(rTm.x - ts, rTm.y - ts),
+                                         rotatedVec2(rTm.x - ts, rTm.y + ts),
+                                         rotatedVec2(rTm.x + ts, rTm.y), col32);
+            draw_list->AddTriangleFilled(rotatedVec2(lTm.x + ts, lTm.y + ts),
+                                         rotatedVec2(lTm.x + ts, lTm.y - ts),
+                                         rotatedVec2(lTm.x - ts, lTm.y), col32);
+        }
+        draw_list->AddCircle(mid, 0.65f * length, col32, 100, 1.5f*width);
+    }
+
+
 }

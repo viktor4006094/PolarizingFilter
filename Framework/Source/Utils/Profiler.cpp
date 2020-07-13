@@ -161,11 +161,12 @@ namespace Falcor
                 std::ostringstream logOss, fileOss;
                 logOss << "dumping " << "profile_" << pData->name << "_" << pData->filesWritten;
                 logInfo(logOss.str());
-                fileOss << "profile_" << pData->name << "_" << pData->filesWritten++;
+                fileOss << "profile_" << pData->name << "_" << pData->filesWritten++ << ".csv";
                 std::ofstream out(fileOss.str().c_str());
-                for (int i = 0; i < _PROFILING_LOG_BATCH_SIZE; ++i)
+                out << "cpu, gpu\n";
+                for (int i = 5; i < _PROFILING_LOG_BATCH_SIZE; ++i)
                 {
-                    out << pData->cpuMs[i] << " " << pData->gpuMs[i] << "\n";
+                    out << pData->cpuMs[i] << ", " << pData->gpuMs[i] << "\n";
                 }
                 pData->stepNr = 0;
             }
@@ -200,7 +201,7 @@ namespace Falcor
             std::ofstream out(fileOss.str().c_str());
             for (int i = 0; i < pData->stepNr; ++i)
             {
-                out << pData->cpuMs[i] << " " << pData->gpuMs[i] << "\n";
+                out << pData->cpuMs[i] << ", " << pData->gpuMs[i] << "\n";
             }
             pData->stepNr = 0;
         }
