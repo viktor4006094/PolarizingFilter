@@ -227,6 +227,7 @@ ShadingData initShadingData()
     sd.height = 0;
     sd.IoR = 0;
     sd.doubleSidedMaterial = false;
+    sd.isMetal = false;
 
     return sd;
 }
@@ -268,6 +269,8 @@ ShadingData _prepareShadingData<L:ITextureSampler>(VertexOut v, MaterialData m, 
         // UE4 uses 0.08 multiplied by a default specular value of 0.5 as a base, hence the 0.04
         sd.specular = lerp(float3(0.04f), baseColor.rgb, spec.b);
         sd.linearRoughness = spec.g;
+
+        sd.isMetal = (spec.b > 0.5);
 
         if (sampleOcclusion) sd.occlusion = spec.r;
     }

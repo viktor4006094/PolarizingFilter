@@ -309,6 +309,17 @@ void MaterialDemoRenderer::lightingPass(RenderContext* pContext, Fbo* pTargetFbo
     ConstantBuffer::SharedPtr pCB = mLightingPass.pVars->getConstantBuffer("PerFrameCB");
     pCB["gOpacityScale"] = mOpacityScale;
 
+    // Polarizing filter
+    pCB["gPolarizingFilterAngle"] = mPolarizingFilterAngle*static_cast<float>(M_PI / 180.0); // radians
+    pCB["gEnablePolarizingFilter"] = mEnablePolarizingFilter;
+
+    // Materials
+    pCB["gCustomMaterial"] = mUseMaterial;
+    pCB["gIOR_n"] = mMetalIoRn;
+    pCB["gIOR_k"] = mMetalIoRk;
+    pCB["gRoughness"] = mMaterialRoughness;
+    pCB["gUseAsDielectric"] = mUseAsDielectric;
+
     if (mControls[ControlID::EnableShadows].enabled)
     {
         pCB["camVpAtLastCsmUpdate"] = mShadowPass.camVpAtLastCsmUpdate;

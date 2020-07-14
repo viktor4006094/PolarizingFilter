@@ -161,6 +161,15 @@ void MaterialDemoRenderer::onGuiRender(SampleCallbacks* pSample, Gui* pGui)
 {
     static const FileDialogFilterVec kImageFilesFilter = { {"bmp"}, {"jpg"}, {"dds"}, {"png"}, {"tiff"}, {"tif"}, {"tga"} };
 
+    //
+    // Helper lambdas
+    //
+    auto setMaterialPreset = [&, this](uint32_t selected) {
+        mMetalIoRn = mMetalPresetsN[selected];
+        mMetalIoRk = mMetalPresetsK[selected];
+    };
+
+
     if (pGui->addButton("Load Model"))
     {
         std::string filename;
@@ -227,6 +236,31 @@ void MaterialDemoRenderer::onGuiRender(SampleCallbacks* pSample, Gui* pGui)
             {
                 applyCsSkinningMode();
             }
+            pGui->endGroup();
+        }
+
+        if (pGui->beginGroup("Polarizing Filter"))
+        {
+            pGui->addCheckBox("Enable", mEnablePolarizingFilter);
+            pGui->addFloatSlider("Filter Angle", mPolarizingFilterAngle, 0.f, 180.f, false, "%.1f");
+
+            pGui->endGroup();
+        }
+
+        if (pGui->beginGroup("Custom Material"))
+        {
+            pGui->addCheckBox("Use material", mUseMaterial);
+
+            if (pGui->addDropdown("Presets", mMetalPresets, mSelectedMetal))
+            {
+                setMaterialPreset(mSelectedMetal);
+            }
+
+            pGui->addFloat3Var("IoR n", mMetalIoRn);
+            pGui->addFloat3Var("IoR k", mMetalIoRk);
+            pGui->addFloatSlider("Roughness", mMaterialRoughness, 0.f, 1.f, false, "%.2f");
+            pGui->addCheckBox("Use as dielectric", mUseAsDielectric);
+
             pGui->endGroup();
         }
 
