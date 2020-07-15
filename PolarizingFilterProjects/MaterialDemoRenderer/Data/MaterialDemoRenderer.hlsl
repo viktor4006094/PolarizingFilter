@@ -46,7 +46,8 @@ layout(binding = 0) cbuffer PerFrameCB : register(b0)
 
     float gPolarizingFilterAngle;
     bool  gEnablePolarizingFilter;
-
+    bool  gUseExactPsi;
+    
     bool   gCustomMaterial;
     float3 gIOR_n;
     float3 gIOR_k;
@@ -102,6 +103,20 @@ float3 SpecularFromIOR(float3 n, float3 k) {
     return saturate((A*A + k*k)/(B*B + k*k));
 }
 
+float3 Psi_Exact(float3 n, float3 k, float sinTheta, float tanTheta)
+{
+	float3 n2 = n*n;
+	float3 k2 = k*k;
+
+	float3 f = n2 - k2 - float3(sinTheta*sinTheta);
+	float3 e = sqrt(f*f + 4.0*n2*k2);
+	float  d = sinTheta*tanTheta;
+	float3 c = sqrt(e + f);
+
+    return (sqrt(2.0)*d*c)/(e + float3(d*d));
+}
+
+
 float3 Psi_MetalApprox(float3 R0, float sinTheta, float cosTheta, float tanTheta)
 {
     float d = sinTheta*tanTheta;
@@ -138,24 +153,6 @@ float Psi_DielectricOneFive(float sinTheta, float tanTheta)
     return saturate((2.0*sqrt(2.25 - st2)*d)/(2.25 - st2 + d*d));
 }
 
-
-// Filter that applies after Fresnel has already been multiplied
-float3 LP_filterApprox(float3 R0, bool isMetal, float sinTheta, float cosTheta, float tanTheta, float angle)
-{
-    // Cheaper
-    float3 Psi;
-    if (isMetal) {
-        Psi = Psi_MetalApprox(R0, sinTheta, cosTheta, tanTheta);
-        //Psi = 0;
-    } else {
-        //Psi = 0.0;
-        //Psi = Psi_DielectricOneFive(sinTheta, tanTheta);
-        Psi = Psi_DielectricExact(R0.r, sinTheta, tanTheta);
-    }
-
-    return (Psi*cos(2.0*angle) + 1.0);
-}
-
 //TODO remove this function maybe?
 // Get the normalized reference x vector from normalized y and z vectors
 float3 computeX(float3 y, float3 z)
@@ -164,11 +161,10 @@ float3 computeX(float3 y, float3 z)
 }
 
 //TODO check if minus sign can be avoided
+// Calculate rotation angle between the camera and the surface
 float calcRelAngle(float3 cameraX, float3 N, float3 V)
 {
     float3 surfaceX = computeX(N, V);
-    
-    // Calculate rotation angle between surfaceX and cameraX
     float dotX = dot(surfaceX, cameraX);
     float detX = dot(-V, cross(surfaceX, cameraX)); // TODO double check these
     return atan2(detX, dotX); // angle between surfaceX and cameraX
@@ -185,11 +181,20 @@ float3 polarizingFilter(ShadingData sd, float3 L, float3 cameraX)
     float cosTheta = saturate(dot(H, L)); //TODO replace with ls.LdotH
     float tanTheta = sinTheta/cosTheta;
 
-    //Aproximate
-    return LP_filterApprox(sd.specular, sd.isMetal, sinTheta, cosTheta, tanTheta, angle);
-    
-    //Correct
-    //TODO
+    // Cheaper
+    float3 Psi;
+    if (gUseExactPsi) {
+        Psi = Psi_Exact(gIOR_n, gIOR_k, sinTheta, tanTheta);
+    } else if (sd.isMetal) {
+        Psi = Psi_MetalApprox(sd.specular, sinTheta, cosTheta, tanTheta);
+        //Psi = 0;
+    } else {
+        //Psi = 0.0;
+        //Psi = Psi_DielectricOneFive(sinTheta, tanTheta);
+        Psi = Psi_DielectricExact(sd.specular.r, sinTheta, tanTheta);
+    }
+
+    return (Psi*cos(2.0*angle) + 1.0);
 }
 
 
@@ -266,21 +271,8 @@ PsOut ps(MainVsOut vOut, float4 pixelCrd : SV_POSITION)
     
     float4 finalColor = float4(0, 0, 0, 1);
 
-    //TODO
-    // TODO? use up-vector instead?
-    // Calculate cameras X 
-    // camera's x points up, y points left //TODO? check that this is correct
-
-    //normalize(gCamera.cameraV); // <- camera up vector. See `HostDeviceSharedCode.h`
-    //normalize(gCamera.cameraW); // <- camera forward vector. See `HostDeviceSharedCode.h`
-    //float3 cameraUp = normalize(invView[1].xyz);
-    //float3 cameraX  = computeX(cameraUp, -rayDirW); // This points to the right
-    float3 cameraUp      = normalize(gCamera.cameraV);
-
-    //TODO these calculations are probably not needed since `cameraU` is the camera right vector
-    //     If that is the case, then remove the cameraX param from the code (but include it in the article)
-    float3 cameraX       = computeX(cameraUp, sd.V); // This points to the right //TODO double-check
-
+    float3 cameraUp = normalize(gCamera.cameraV);
+    float3 cameraX  = computeX(cameraUp, sd.V); // This points to the right //TODO double-check
 
     [unroll]
     for (uint l = 0; l < _LIGHT_COUNT; l++) {
@@ -293,7 +285,7 @@ PsOut ps(MainVsOut vOut, float4 pixelCrd : SV_POSITION)
 #endif
         finalColor.rgb += evalMaterialWithFilter(sd, gLights[l], shadowFactor, cameraX).color.rgb;
 
-        //TODO break loop 
+        //TODO break loop for performance testing with fewer lights
     }
 
     // Add the emissive component

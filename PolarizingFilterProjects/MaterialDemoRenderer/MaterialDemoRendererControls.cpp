@@ -243,6 +243,7 @@ void MaterialDemoRenderer::onGuiRender(SampleCallbacks* pSample, Gui* pGui)
         {
             pGui->addCheckBox("Enable", mEnablePolarizingFilter);
             pGui->addFloatSlider("Filter Angle", mPolarizingFilterAngle, 0.f, 180.f, false, "%.1f");
+            pGui->addCheckBox("Exact version", mUseExactPsi);
 
             pGui->endGroup();
         }

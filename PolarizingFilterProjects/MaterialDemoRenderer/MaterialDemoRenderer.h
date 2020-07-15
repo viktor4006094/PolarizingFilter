@@ -281,8 +281,9 @@ private:
     void applyLightingProgramControl(ControlID controlID);
 
     // Polarizing Filter
-    bool mEnablePolarizingFilter = true;
-    float mPolarizingFilterAngle = 0.0f;
+    bool  mEnablePolarizingFilter = true;
+    float mPolarizingFilterAngle  = 0.0f;
+    bool  mUseExactPsi            = false;
 
     // Material
     bool      mUseMaterial       = true;

@@ -312,6 +312,7 @@ void MaterialDemoRenderer::lightingPass(RenderContext* pContext, Fbo* pTargetFbo
     // Polarizing filter
     pCB["gPolarizingFilterAngle"] = mPolarizingFilterAngle*static_cast<float>(M_PI / 180.0); // radians
     pCB["gEnablePolarizingFilter"] = mEnablePolarizingFilter;
+    pCB["gUseExactPsi"] = mUseExactPsi;
 
     // Materials
     pCB["gCustomMaterial"] = mUseMaterial;
