@@ -510,7 +510,8 @@ bool MaterialDemoRenderer::onKeyEvent(SampleCallbacks* pSample, const KeyboardEv
     if (mpSceneRenderer && keyEvent.type == KeyboardEvent::Type::KeyPressed)
     {
         //std::string fileName = mMetalPresets[mSelectedMetal].label + (mUseExactPsi ? "Exact" : "Approx");
-        std::string fileName = mMetalPresets[mSelectedMetal].label + "Unfiltered";
+        //std::string fileName = mMetalPresets[mSelectedMetal].label + "Unfiltered";
+        std::string fileName = mMetalPresets[mSelectedMetal].label + "Diff";
 
         switch (keyEvent.key)
         {
@@ -519,7 +520,7 @@ bool MaterialDemoRenderer::onKeyEvent(SampleCallbacks* pSample, const KeyboardEv
             applyCameraPathState();
             return true;
         case KeyboardEvent::Key::Key1:
-            //pSample->captureScreen(fileName.c_str(), "MaterialScreenshots");
+            pSample->captureScreen(fileName.c_str(), "MaterialScreenshots");
             return true;
         case KeyboardEvent::Key::O:
             mPerMaterialShader = !mPerMaterialShader;

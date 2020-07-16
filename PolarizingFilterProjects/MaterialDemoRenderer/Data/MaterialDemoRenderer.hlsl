@@ -166,7 +166,7 @@ float calcRelAngle(float3 cameraX, float3 N, float3 V)
 }
 
 
-float3 polarizingFilter(ShadingData sd, float3 L, float3 cameraX, float ct)
+float3 polarizingFilter(ShadingData sd, float3 L, float3 cameraX, float ct, bool useExact)
 {
     float3 H     = normalize(sd.V + L);
     float  angle = -gPolarizingFilterAngle - calcRelAngle(cameraX, H, sd.V);
@@ -177,7 +177,7 @@ float3 polarizingFilter(ShadingData sd, float3 L, float3 cameraX, float ct)
     
     // Cheaper
     float3 Psi;
-    if (gUseExactPsi) {
+    if (gUseExactPsi || useExact) {
         Psi = Psi_Exact(gIOR_n, gIOR_k, ct, st2);
     } else if (sd.metalness > 0.5) {
         Psi = Psi_MetalApprox(sd.specular, ct, st2);
@@ -193,7 +193,7 @@ float3 polarizingFilter(ShadingData sd, float3 L, float3 cameraX, float ct)
 
 
 //// Normal light sources ////
-ShadingResult evalMaterialWithFilter(ShadingData sd, LightData light, float shadowFactor, float3 cameraX)
+ShadingResult evalMaterialWithFilter(ShadingData sd, LightData light, float shadowFactor, float3 cameraX, bool useExact)
 {
     ShadingResult sr = initShadingResult();
     LightSample ls = evalLight(light, sd);
@@ -214,7 +214,7 @@ ShadingResult evalMaterialWithFilter(ShadingData sd, LightData light, float shad
 
     // Apply polarizing filter
     if (gEnablePolarizingFilter) {
-        float3 filter = polarizingFilter(sd, normalize(ls.L), cameraX, saturate(ls.LdotH));
+        float3 filter = polarizingFilter(sd, normalize(ls.L), cameraX, saturate(ls.LdotH), useExact);
         sr.specular *= filter;
     }
 
@@ -227,7 +227,7 @@ ShadingResult evalMaterialWithFilter(ShadingData sd, LightData light, float shad
 };
 
 //// Light probes ////
-ShadingResult evalMaterialWithFilter(ShadingData sd, LightProbeData probe, float3 cameraX)
+ShadingResult evalMaterialWithFilter(ShadingData sd, LightProbeData probe, float3 cameraX, bool useExact)
 {
     ShadingResult sr = initShadingResult();
     LightSample ls = evalLightProbe(probe, sd);
@@ -238,7 +238,7 @@ ShadingResult evalMaterialWithFilter(ShadingData sd, LightProbeData probe, float
 
     // Apply polarizing filter
     if (gEnablePolarizingFilter) {
-        float3 filter = polarizingFilter(sd, ls.L, cameraX, saturate(ls.LdotH));
+        float3 filter = polarizingFilter(sd, ls.L, cameraX, saturate(ls.LdotH), useExact);
         sr.specular *= filter;
     }
     
@@ -264,6 +264,7 @@ PsOut ps(MainVsOut vOut, float4 pixelCrd : SV_POSITION)
     }
     
     float4 finalColor = float4(0, 0, 0, 1);
+    float4 exactColor = float4(0, 0, 0, 1);
 
     float3 cameraUp = normalize(gCamera.cameraV);
     float3 cameraX  = computeX(cameraUp, sd.V); // This points to the right //TODO double-check
@@ -277,25 +278,39 @@ PsOut ps(MainVsOut vOut, float4 pixelCrd : SV_POSITION)
             shadowFactor *= sd.opacity;
         }
 #endif
-        finalColor.rgb += evalMaterialWithFilter(sd, gLights[l], shadowFactor, cameraX).color.rgb;
+        finalColor.rgb += evalMaterialWithFilter(sd, gLights[l], shadowFactor, cameraX, false).color.rgb;
+
+        // To compare with
+        exactColor.rgb += evalMaterialWithFilter(sd, gLights[l], shadowFactor, cameraX, true).color.rgb;
 
         //TODO break loop for performance testing with fewer lights
     }
 
     // Add the emissive component
     finalColor.rgb += sd.emissive;
+    exactColor.rgb += sd.emissive;
 
 #ifdef _ENABLE_TRANSPARENCY
     finalColor.a = sd.opacity * gOpacityScale;
+    exactColor.a = sd.opacity * gOpacityScale;
 #endif
 
 #ifdef _ENABLE_REFLECTIONS
-    finalColor.rgb += evalMaterialWithFilter(sd, gLightProbe, cameraX).color.rgb;
+    finalColor.rgb += evalMaterialWithFilter(sd, gLightProbe, cameraX, false).color.rgb;
+    exactColor.rgb += evalMaterialWithFilter(sd, gLightProbe, cameraX, true).color.rgb;
 #endif
 
     // Add light-map
     finalColor.rgb += sd.diffuse * sd.lightMap.rgb;
+    exactColor.rgb += sd.diffuse * sd.lightMap.rgb;
 
+    if (!gUseExactPsi) {
+        float greyVal = 0.695;
+        //float greyVal = 0.5;
+        finalColor.rgb = 10.0*(finalColor.rgb - exactColor.rgb) + float3(greyVal, greyVal, greyVal);
+        //finalColor.rgb = float3(greyVal, greyVal, greyVal);
+    }
+    
     psOut.color = finalColor;
     psOut.normal = float4(vOut.vsData.normalW * 0.5f + 0.5f, 1.0f);
 
