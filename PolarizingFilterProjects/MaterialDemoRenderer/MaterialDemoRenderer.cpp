@@ -27,7 +27,8 @@
 ***************************************************************************/
 #include "MaterialDemoRenderer.h"
 
-const std::string MaterialDemoRenderer::skDefaultScene = "Arcade/Arcade.fscene";
+//const std::string MaterialDemoRenderer::skDefaultScene = "Arcade/Arcade.fscene";
+const std::string MaterialDemoRenderer::skDefaultScene = "Bistro v4 Update/Bistro_v4/MaterialTest.fscene";
 
 void MaterialDemoRenderer::initDepthPass()
 {
@@ -120,7 +121,8 @@ void MaterialDemoRenderer::initScene(SampleCallbacks* pSample, Scene::SharedPtr 
         // Create a directional light
         DirectionalLight::SharedPtr pDirLight = DirectionalLight::create();
         pDirLight->setWorldDirection(vec3(-0.189f, -0.861f, -0.471f));
-        pDirLight->setIntensity(vec3(1, 1, 0.985f) * 10.0f);
+        //pDirLight->setIntensity(vec3(1, 1, 0.985f) * 10.0f);
+        pDirLight->setIntensity(vec3(0.f, 0.f, 0.f));
         pDirLight->setName("DirLight");
         pScene->addLight(pDirLight);
     }
@@ -136,7 +138,7 @@ void MaterialDemoRenderer::initScene(SampleCallbacks* pSample, Scene::SharedPtr 
     mpSceneRenderer = MaterialDemoRendererSceneRenderer::create(pScene);
     mpSceneRenderer->setCameraControllerType(SceneRenderer::CameraControllerType::FirstPerson);
     mpSceneRenderer->toggleStaticMaterialCompilation(mPerMaterialShader);
-    setSceneSampler(mpSceneSampler ? mpSceneSampler->getMaxAnisotropy() : 4);
+    setSceneSampler(mpSceneSampler ? mpSceneSampler->getMaxAnisotropy() : 16);
     setActiveCameraAspectRatio(pSample->getCurrentFbo()->getWidth(), pSample->getCurrentFbo()->getHeight());
     initDepthPass();
     initLightingPass();
@@ -236,7 +238,7 @@ void MaterialDemoRenderer::initAA(SampleCallbacks* pSample)
 
 void MaterialDemoRenderer::initPostProcess()
 {
-    mpToneMapper = ToneMapping::create(ToneMapping::Operator::Aces);
+    mpToneMapper = ToneMapping::create(ToneMapping::Operator::Clamp);
 }
 
 void MaterialDemoRenderer::onLoad(SampleCallbacks* pSample, RenderContext* pRenderContext)
@@ -507,11 +509,17 @@ bool MaterialDemoRenderer::onKeyEvent(SampleCallbacks* pSample, const KeyboardEv
 {
     if (mpSceneRenderer && keyEvent.type == KeyboardEvent::Type::KeyPressed)
     {
+        //std::string fileName = mMetalPresets[mSelectedMetal].label + (mUseExactPsi ? "Exact" : "Approx");
+        std::string fileName = mMetalPresets[mSelectedMetal].label + "Unfiltered";
+
         switch (keyEvent.key)
         {
         case KeyboardEvent::Key::Minus:
             mUseCameraPath = !mUseCameraPath;
             applyCameraPathState();
+            return true;
+        case KeyboardEvent::Key::Key1:
+            //pSample->captureScreen(fileName.c_str(), "MaterialScreenshots");
             return true;
         case KeyboardEvent::Key::O:
             mPerMaterialShader = !mPerMaterialShader;
@@ -578,6 +586,9 @@ int main(int argc, char** argv)
     SampleConfig config;
     config.windowDesc.title = "Material Demo Renderer";
     config.windowDesc.resizableWindow = false;
+
+    config.windowDesc.height = 512;
+    config.windowDesc.width  = 512;
 #ifdef _WIN32
     Sample::run(config, pRenderer);
 #else

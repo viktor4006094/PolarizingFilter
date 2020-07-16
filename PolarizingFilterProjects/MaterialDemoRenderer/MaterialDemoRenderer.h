@@ -92,7 +92,6 @@ public:
     bool onMouseEvent(SampleCallbacks* pSample, const MouseEvent& mouseEvent) override;
     void onGuiRender(SampleCallbacks* pSample, Gui* pGui) override;
     void onDroppedFile(SampleCallbacks* pSample, const std::string& filename) override;
-
 private:
 #define X(...) X_NAME(__VA_ARGS__)
     enum MetalPreset : uint32_t
@@ -273,7 +272,7 @@ private:
     };
 
     float mOpacityScale = 0.5f;
-    AAMode mAAMode = AAMode::TAA;
+    AAMode mAAMode = AAMode::None;
     uint32_t mMSAASampleCount = 4;
     SamplePattern mTAASamplePattern = SamplePattern::Halton;
     void applyAaMode(SampleCallbacks* pSample);
@@ -282,13 +281,13 @@ private:
 
     // Polarizing Filter
     bool  mEnablePolarizingFilter = true;
-    float mPolarizingFilterAngle  = 0.0f;
+    float mPolarizingFilterAngle  = 90.0f;
     bool  mUseExactPsi            = false;
 
     // Material
     bool      mUseMaterial       = true;
     bool      mUseAsDielectric   = false;
-    float     mMaterialRoughness = 0.2f;
+    float     mMaterialRoughness = 0.08f;
 
     uint32    mSelectedMetal = MetalPreset::Gold;
     glm::vec3 mMetalIoRn     = mMetalPresetsN[MetalPreset::Gold];
@@ -298,7 +297,7 @@ private:
 
     bool mUseCameraPath = true;
     void applyCameraPathState();
-    bool mPerMaterialShader = false;
+    bool mPerMaterialShader = true;
     bool mEnableDepthPass = true;
     bool mUseCsSkinning = false;
     void applyCsSkinningMode();

@@ -36,6 +36,7 @@ __import BRDF;
 // Needed for evalMaterialWithFilter
 __import Lights;
 
+#define M_SQRT2 1.41421356237309504880 // sqrt(2)
 
 layout(binding = 0) cbuffer PerFrameCB : register(b0)
 {
@@ -93,6 +94,12 @@ struct PsOut
 
 // TODO Move all these functions to their own file
 
+//TODO remove this function maybe?
+// Get the normalized reference x vector from normalized y and z vectors
+float3 computeX(float3 y, float3 z)
+{
+    return normalize(cross(y, z));
+}
 
 //TODO get rid of tan, move out all common stuff
 
@@ -103,61 +110,49 @@ float3 SpecularFromIOR(float3 n, float3 k) {
     return saturate((A*A + k*k)/(B*B + k*k));
 }
 
-float3 Psi_Exact(float3 n, float3 k, float sinTheta, float tanTheta)
+float3 Psi_Exact(float3 n, float3 k, float ct, float st2)
 {
-	float3 n2 = n*n;
-	float3 k2 = k*k;
+    float3 n2 = n*n;
+    float3 k2 = k*k;
 
-	float3 f = n2 - k2 - float3(sinTheta*sinTheta);
-	float3 e = sqrt(f*f + 4.0*n2*k2);
-	float  d = sinTheta*tanTheta;
-	float3 c = sqrt(e + f);
+    float3 c = n2 - k2 - float3(st2);
+    float3 h = sqrt(c*c + 4.0*n2*k2);
+    float3 g = sqrt(h + c);
 
-    return (sqrt(2.0)*d*c)/(e + float3(d*d));
+    return saturate( ((M_SQRT2*ct*st2)*g)/((ct*ct)*h + float3(st2*st2)) );
 }
 
 
-float3 Psi_MetalApprox(float3 R0, float sinTheta, float cosTheta, float tanTheta)
+float3 Psi_MetalApprox(float3 R0, float ct, float st2)
 {
-    float d = sinTheta*tanTheta;
-
     float3 Rb = (float3(1.095)-R0);
     float3 Rg = (float3(1.14)-R0);
 
     float3 beta  = 0.1/(Rb*Rb*Rb) + 5.4*R0*R0 + 1.0;
     float3 gamma = (0.16*R0*R0)/(Rg*Rg) + 0.15*cos(15.0*R0) + 0.15;
 
-    return saturate(d/(beta + gamma*d*d));
+    return saturate( (ct*st2)/(beta*ct*ct + gamma*st2*st2) );
 }
 
-
-float Psi_DielectricExact(float R0, float sinTheta, float tanTheta)
+// ct  : cos(theta)
+// st2 : sin^2(theta)
+float Psi_DielectricExact(float R0, float ct, float st2)
 {
     // For dielectrics R0 is always small, but R0 values for metals are used by this function to so
     // a min() is required to prevent division by zero.
-    float n   = (1.0 + sqrt(R0))/(1.0 - min(sqrt(R0), 0.5));
-    float n2  = n*n;
-    float d   = sinTheta*tanTheta;
-    float st2 = sinTheta*sinTheta;
+    float n   = (1.0 + sqrt(R0))/(1.0 - sqrt(R0));
+    float c   = n*n - st2;
 
-    return (2.0*sqrt(n2 - st2)*d)/(n2 - st2 + d*d);
+    return saturate( (2.0*sqrt(c)*ct*st2)/(c*ct*ct + st2*st2) );
 }
 
 
 // Assuming that all dilectrics have R0 = 0.04 i.e., n = 1.5
-float Psi_DielectricOneFive(float sinTheta, float tanTheta)
+float Psi_DielectricOneFive(float ct, float st2)
 {
-    float d   = sinTheta*tanTheta;
-    float st2 = sinTheta*sinTheta;
+    float e   = 2.25 - st2;
 
-    return saturate((2.0*sqrt(2.25 - st2)*d)/(2.25 - st2 + d*d));
-}
-
-//TODO remove this function maybe?
-// Get the normalized reference x vector from normalized y and z vectors
-float3 computeX(float3 y, float3 z)
-{
-    return normalize(cross(y, z));
+    return saturate( (2.0*sqrt(e)*ct*st2)/(e*ct*ct + st2*st2) );
 }
 
 //TODO check if minus sign can be avoided
@@ -171,27 +166,26 @@ float calcRelAngle(float3 cameraX, float3 N, float3 V)
 }
 
 
-float3 polarizingFilter(ShadingData sd, float3 L, float3 cameraX)
+float3 polarizingFilter(ShadingData sd, float3 L, float3 cameraX, float ct)
 {
-    float3 H = normalize(sd.V + L);
+    float3 H     = normalize(sd.V + L);
+    float  angle = -gPolarizingFilterAngle - calcRelAngle(cameraX, H, sd.V);
 
-    float angle = -gPolarizingFilterAngle - calcRelAngle(cameraX, H, sd.V);
-
-    float sinTheta = length(cross(L, H));
-    float cosTheta = saturate(dot(H, L)); //TODO replace with ls.LdotH
-    float tanTheta = sinTheta/cosTheta;
-
+    // sin(theta) and sin^2(theta)
+    float st  = length(cross(L, H));
+    float st2 = st*st;
+    
     // Cheaper
     float3 Psi;
     if (gUseExactPsi) {
-        Psi = Psi_Exact(gIOR_n, gIOR_k, sinTheta, tanTheta);
-    } else if (sd.isMetal) {
-        Psi = Psi_MetalApprox(sd.specular, sinTheta, cosTheta, tanTheta);
+        Psi = Psi_Exact(gIOR_n, gIOR_k, ct, st2);
+    } else if (sd.metalness > 0.5) {
+        Psi = Psi_MetalApprox(sd.specular, ct, st2);
         //Psi = 0;
     } else {
         //Psi = 0.0;
-        //Psi = Psi_DielectricOneFive(sinTheta, tanTheta);
-        Psi = Psi_DielectricExact(sd.specular.r, sinTheta, tanTheta);
+        //Psi = Psi_DielectricOneFive(ct, st2);
+        Psi = Psi_DielectricExact(sd.specular.r, ct, st2);
     }
 
     return (Psi*cos(2.0*angle) + 1.0);
@@ -220,7 +214,7 @@ ShadingResult evalMaterialWithFilter(ShadingData sd, LightData light, float shad
 
     // Apply polarizing filter
     if (gEnablePolarizingFilter) {
-        float3 filter = polarizingFilter(sd, normalize(ls.L), cameraX);
+        float3 filter = polarizingFilter(sd, normalize(ls.L), cameraX, saturate(ls.LdotH));
         sr.specular *= filter;
     }
 
@@ -244,7 +238,7 @@ ShadingResult evalMaterialWithFilter(ShadingData sd, LightProbeData probe, float
 
     // Apply polarizing filter
     if (gEnablePolarizingFilter) {
-        float3 filter = polarizingFilter(sd, ls.L, cameraX);
+        float3 filter = polarizingFilter(sd, ls.L, cameraX, saturate(ls.LdotH));
         sr.specular *= filter;
     }
     
@@ -264,7 +258,7 @@ PsOut ps(MainVsOut vOut, float4 pixelCrd : SV_POSITION)
     if (gCustomMaterial) {
         sd.diffuse = float3(0.0);
         sd.specular = SpecularFromIOR(gIOR_n, gIOR_k);
-        sd.isMetal = !gUseAsDielectric;
+        sd.metalness = gUseAsDielectric ? 0.0 : 1.0;
         sd.linearRoughness = max(0.08, gRoughness); // Clamp the roughness so that the BRDF won't explode
         sd.roughness = sd.linearRoughness * sd.linearRoughness;
     }

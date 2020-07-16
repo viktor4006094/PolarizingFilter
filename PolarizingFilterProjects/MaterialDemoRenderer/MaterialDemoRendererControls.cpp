@@ -239,7 +239,7 @@ void MaterialDemoRenderer::onGuiRender(SampleCallbacks* pSample, Gui* pGui)
             pGui->endGroup();
         }
 
-        if (pGui->beginGroup("Polarizing Filter"))
+        if (pGui->beginGroup("Polarizing Filter", true))
         {
             pGui->addCheckBox("Enable", mEnablePolarizingFilter);
             pGui->addFloatSlider("Filter Angle", mPolarizingFilterAngle, 0.f, 180.f, false, "%.1f");
@@ -248,7 +248,7 @@ void MaterialDemoRenderer::onGuiRender(SampleCallbacks* pSample, Gui* pGui)
             pGui->endGroup();
         }
 
-        if (pGui->beginGroup("Custom Material"))
+        if (pGui->beginGroup("Custom Material", true))
         {
             pGui->addCheckBox("Use material", mUseMaterial);
 
@@ -259,7 +259,7 @@ void MaterialDemoRenderer::onGuiRender(SampleCallbacks* pSample, Gui* pGui)
 
             pGui->addFloat3Var("IoR n", mMetalIoRn);
             pGui->addFloat3Var("IoR k", mMetalIoRk);
-            pGui->addFloatSlider("Roughness", mMaterialRoughness, 0.f, 1.f, false, "%.2f");
+            pGui->addFloatSlider("Roughness", mMaterialRoughness, 0.08f, 1.f, false, "%.2f");
             pGui->addCheckBox("Use as dielectric", mUseAsDielectric);
 
             pGui->endGroup();
