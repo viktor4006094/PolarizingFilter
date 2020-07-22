@@ -110,7 +110,7 @@ float3 SpecularFromIOR(float3 n, float3 k) {
     return saturate((A*A + k*k)/(B*B + k*k));
 }
 
-float3 Psi_Exact(float3 n, float3 k, float ct, float st2)
+float3 psi_Exact(float3 n, float3 k, float ct, float st2)
 {
     float3 n2 = n*n;
     float3 k2 = k*k;
@@ -123,32 +123,33 @@ float3 Psi_Exact(float3 n, float3 k, float ct, float st2)
 }
 
 
-float3 Psi_MetalApprox(float3 R0, float ct, float st2)
+float3 psi_MetalApprox(float3 R0, float ct, float st2)
 {
-    float3 Rb = (float3(1.095)-R0);
-    float3 Rg = (float3(1.14)-R0);
-
-    float3 beta  = 0.1/(Rb*Rb*Rb) + 5.4*R0*R0 + 1.0;
-    float3 gamma = (0.16*R0*R0)/(Rg*Rg) + 0.15*cos(15.0*R0) + 0.15;
-
-    return saturate( (ct*st2)/(beta*ct*ct + gamma*st2*st2) );
+    float3 Rb = float3(1.095) - R0;
+    float3 Rg = float3(1.18) - R0;
+    float3 beta  = float3(0.1)/(Rb*Rb*Rb) + 5.4*R0*R0 + float3(1.0);
+    float3 gamma = (0.16*R0*R0)/(Rg*Rg) + 0.35*Rg;
+    
+    float3 psi = (ct*st2)/(beta*ct*ct + gamma*st2*st2);
+    return saturate(psi);
 }
 
-// ct  : cos(theta)
-// st2 : sin^2(theta)
-float Psi_DielectricExact(float R0, float ct, float st2)
+// R0  - specular color
+// ct  - cos(theta)
+// st2 - sin^2(theta)
+float psi_DielectricExact(float R0, float ct, float st2)
 {
-    // For dielectrics R0 is always small, but R0 values for metals are used by this function to so
-    // a min() is required to prevent division by zero.
-    float n   = (1.0 + sqrt(R0))/(1.0 - sqrt(R0));
-    float c   = n*n - st2;
+    float n = (1.0 + sqrt(R0))/(1.0 - sqrt(R0));
+    float c = n*n - st2;
 
-    return saturate( (2.0*sqrt(c)*ct*st2)/(c*ct*ct + st2*st2) );
+    float psi = (2.0*sqrt(c)*ct*st2)/(c*ct*ct + st2*st2);
+
+    return saturate(psi);
 }
 
 
 // Assuming that all dilectrics have R0 = 0.04 i.e., n = 1.5
-float Psi_DielectricOneFive(float ct, float st2)
+float psi_DielectricOneFive(float ct, float st2)
 {
     float e   = 2.25 - st2;
 
@@ -157,38 +158,33 @@ float Psi_DielectricOneFive(float ct, float st2)
 
 //TODO check if minus sign can be avoided
 // Calculate rotation angle between the camera and the surface
-float calcRelAngle(float3 cameraX, float3 N, float3 V)
+float calcRelativeAngle(float3 cameraX, float3 N, float3 V)
 {
     float3 surfaceX = computeX(N, V);
     float dotX = dot(surfaceX, cameraX);
-    float detX = dot(-V, cross(surfaceX, cameraX)); // TODO double check these
-    return atan2(detX, dotX); // angle between surfaceX and cameraX
+    float detX = dot(V, cross(surfaceX, cameraX)); // TODO double check these
+    return atan2(detX, dotX) - gPolarizingFilterAngle;
 }
 
 
-float3 polarizingFilter(ShadingData sd, float3 L, float3 cameraX, float ct, bool useExact)
+float3 polarizingFilter(ShadingData sd, LightSample ls, float3 cameraX, bool useExact)
 {
-    float3 H     = normalize(sd.V + L);
-    float  angle = -gPolarizingFilterAngle - calcRelAngle(cameraX, H, sd.V);
-
-    // sin(theta) and sin^2(theta)
-    float st  = length(cross(L, H));
-    float st2 = st*st;
+    float3 H     = normalize(sd.V + ls.L);
+    float  angle = calcRelativeAngle(cameraX, H, sd.V);
+    float st  = length(cross(ls.L, H)); // sin(theta)
+    float st2 = st*st;                  // sin^2(theta)
     
     // Cheaper
-    float3 Psi;
+    float3 psi;
     if (gUseExactPsi || useExact) {
-        Psi = Psi_Exact(gIOR_n, gIOR_k, ct, st2);
+        psi = psi_Exact(gIOR_n, gIOR_k, ls.LdotH, st2);
     } else if (sd.metalness > 0.5) {
-        Psi = Psi_MetalApprox(sd.specular, ct, st2);
-        //Psi = 0;
+        psi = psi_MetalApprox(sd.specular, ls.LdotH, st2);
     } else {
-        //Psi = 0.0;
-        //Psi = Psi_DielectricOneFive(ct, st2);
-        Psi = Psi_DielectricExact(sd.specular.r, ct, st2);
+        psi = float3(psi_DielectricExact(sd.specular.r, ls.LdotH, st2));
     }
 
-    return (Psi*cos(2.0*angle) + 1.0);
+    return (cos(2.0*angle)*psi + float3(1.0));
 }
 
 
@@ -214,7 +210,7 @@ ShadingResult evalMaterialWithFilter(ShadingData sd, LightData light, float shad
 
     // Apply polarizing filter
     if (gEnablePolarizingFilter) {
-        float3 filter = polarizingFilter(sd, normalize(ls.L), cameraX, saturate(ls.LdotH), useExact);
+        float3 filter = polarizingFilter(sd, ls, cameraX, useExact);
         sr.specular *= filter;
     }
 
@@ -224,7 +220,7 @@ ShadingResult evalMaterialWithFilter(ShadingData sd, LightData light, float shad
     sr.color.rgb *= shadowFactor;
 
     return sr;
-};
+}
 
 //// Light probes ////
 ShadingResult evalMaterialWithFilter(ShadingData sd, LightProbeData probe, float3 cameraX, bool useExact)
@@ -238,7 +234,7 @@ ShadingResult evalMaterialWithFilter(ShadingData sd, LightProbeData probe, float
 
     // Apply polarizing filter
     if (gEnablePolarizingFilter) {
-        float3 filter = polarizingFilter(sd, ls.L, cameraX, saturate(ls.LdotH), useExact);
+        float3 filter = polarizingFilter(sd, ls, cameraX, useExact);
         sr.specular *= filter;
     }
     
@@ -255,13 +251,17 @@ PsOut ps(MainVsOut vOut, float4 pixelCrd : SV_POSITION)
 
     ShadingData sd = prepareShadingData(vOut.vsData, gMaterial, gCamera.posW);
 
+
+    
     if (gCustomMaterial) {
         sd.diffuse = float3(0.0);
         sd.specular = SpecularFromIOR(gIOR_n, gIOR_k);
+        //sd.specular = gIOR_n;
         sd.metalness = gUseAsDielectric ? 0.0 : 1.0;
         sd.linearRoughness = max(0.08, gRoughness); // Clamp the roughness so that the BRDF won't explode
         sd.roughness = sd.linearRoughness * sd.linearRoughness;
     }
+    //sd.N = normalize(vOut.vsData.normalW);
     
     float4 finalColor = float4(0, 0, 0, 1);
     float4 exactColor = float4(0, 0, 0, 1);
@@ -307,7 +307,7 @@ PsOut ps(MainVsOut vOut, float4 pixelCrd : SV_POSITION)
     if (!gUseExactPsi) {
         float greyVal = 0.695;
         //float greyVal = 0.5;
-        finalColor.rgb = 10.0*(finalColor.rgb - exactColor.rgb) + float3(greyVal, greyVal, greyVal);
+        //finalColor.rgb = 10.0*(finalColor.rgb - exactColor.rgb) + float3(greyVal, greyVal, greyVal);
         //finalColor.rgb = float3(greyVal, greyVal, greyVal);
     }
     
@@ -322,5 +322,9 @@ PsOut ps(MainVsOut vOut, float4 pixelCrd : SV_POSITION)
     float3 cascadeColor = gVisibilityBuffer.Load(int3(vOut.vsData.posH.xy, 0)).gba;
     psOut.color.rgb *= cascadeColor;
 #endif
+
+    //psOut.color.rgb = normalize(sd.N);
+    //psOut.color.rgb = normalize(vOut.vsData.normalW);
+    
     return psOut;
 }

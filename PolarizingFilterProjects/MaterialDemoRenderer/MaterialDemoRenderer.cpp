@@ -509,9 +509,9 @@ bool MaterialDemoRenderer::onKeyEvent(SampleCallbacks* pSample, const KeyboardEv
 {
     if (mpSceneRenderer && keyEvent.type == KeyboardEvent::Type::KeyPressed)
     {
-        //std::string fileName = mMetalPresets[mSelectedMetal].label + (mUseExactPsi ? "Exact" : "Approx");
+        std::string fileName = mMetalPresets[mSelectedMetal].label + (mUseExactPsi ? "Exact" : "Approx");
         //std::string fileName = mMetalPresets[mSelectedMetal].label + "Unfiltered";
-        std::string fileName = mMetalPresets[mSelectedMetal].label + "Diff";
+        //std::string fileName = mMetalPresets[mSelectedMetal].label + "Diff";
 
         switch (keyEvent.key)
         {
