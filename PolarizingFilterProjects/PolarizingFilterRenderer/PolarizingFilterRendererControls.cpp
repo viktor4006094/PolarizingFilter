@@ -230,6 +230,15 @@ void PolarizingFilterRenderer::onGuiRender(SampleCallbacks* pSample, Gui* pGui)
             pGui->endGroup();
         }
 
+        if (pGui->beginGroup("Polarizing Filter", true)) {
+            pGui->addCheckBox("Enable", mEnablePolarizingFilter);
+            if (mEnablePolarizingFilter) {
+                pGui->addFloatSlider("Filter Angle", mPolarizingFilterAngle, 0.f, 180.f, false, "%.1f");
+            }
+
+            pGui->endGroup();
+        }
+
         if (pGui->beginGroup("Renderer Settings"))
         {
             pGui->addCheckBox("Depth Pass", mEnableDepthPass);

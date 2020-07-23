@@ -27,6 +27,10 @@
 ***************************************************************************/
 #include "PolarizingFilterRenderer.h"
 
+// pi/180
+#define DEG_TO_RAD 0.01745329238474369049072265625f
+
+
 const std::string PolarizingFilterRenderer::skDefaultScene = "Arcade/Arcade.fscene";
 
 void PolarizingFilterRenderer::initDepthPass()
@@ -37,7 +41,8 @@ void PolarizingFilterRenderer::initDepthPass()
 
 void PolarizingFilterRenderer::initLightingPass()
 {
-    mLightingPass.pProgram = GraphicsProgram::createFromFile("ForwardRenderer.slang", "vs", "ps");
+    //mLightingPass.pProgram = GraphicsProgram::createFromFile("ForwardRenderer.slang", "vs", "ps");
+    mLightingPass.pProgram = GraphicsProgram::createFromFile("PolarizingFilterRenderer.hlsl", "vs", "ps");
     mLightingPass.pProgram->addDefine("_LIGHT_COUNT", std::to_string(mpSceneRenderer->getScene()->getLightCount()));
     initControls();
     mLightingPass.pVars = GraphicsVars::create(mLightingPass.pProgram->getReflector());
@@ -133,10 +138,10 @@ void PolarizingFilterRenderer::initScene(SampleCallbacks* pSample, Scene::Shared
         pProbe->setSampler(mpSceneSampler);
     }
 
-    mpSceneRenderer = ForwardRendererSceneRenderer::create(pScene);
+    mpSceneRenderer = PolarizingFilterRendererSceneRenderer::create(pScene);
     mpSceneRenderer->setCameraControllerType(SceneRenderer::CameraControllerType::FirstPerson);
     mpSceneRenderer->toggleStaticMaterialCompilation(mPerMaterialShader);
-    setSceneSampler(mpSceneSampler ? mpSceneSampler->getMaxAnisotropy() : 4);
+    setSceneSampler(mpSceneSampler ? mpSceneSampler->getMaxAnisotropy() : 16);
     setActiveCameraAspectRatio(pSample->getCurrentFbo()->getWidth(), pSample->getCurrentFbo()->getHeight());
     initDepthPass();
     initLightingPass();
@@ -295,7 +300,7 @@ void PolarizingFilterRenderer::depthPass(RenderContext* pContext)
     mpState->setProgram(mDepthPass.pProgram);
     pContext->setGraphicsVars(mDepthPass.pVars);
     
-    auto renderMode = mControls[EnableTransparency].enabled ? ForwardRendererSceneRenderer::Mode::Opaque : ForwardRendererSceneRenderer::Mode::All;
+    auto renderMode = mControls[EnableTransparency].enabled ? PolarizingFilterRendererSceneRenderer::Mode::Opaque : PolarizingFilterRendererSceneRenderer::Mode::All;
     mpSceneRenderer->setRenderMode(renderMode);
     mpSceneRenderer->renderScene(pContext);
 }
@@ -308,6 +313,10 @@ void PolarizingFilterRenderer::lightingPass(RenderContext* pContext, Fbo* pTarge
     pContext->setGraphicsVars(mLightingPass.pVars);
     ConstantBuffer::SharedPtr pCB = mLightingPass.pVars->getConstantBuffer("PerFrameCB");
     pCB["gOpacityScale"] = mOpacityScale;
+
+    // Polarizing filter
+    pCB["gPolarizingFilterAngle"] = -mPolarizingFilterAngle*DEG_TO_RAD; // radians
+    pCB["gEnablePolarizingFilter"] = mEnablePolarizingFilter;
 
     if (mControls[ControlID::EnableShadows].enabled)
     {
@@ -328,7 +337,7 @@ void PolarizingFilterRenderer::lightingPass(RenderContext* pContext, Fbo* pTarge
     }
     else
     {
-        mpSceneRenderer->setRenderMode(ForwardRendererSceneRenderer::Mode::All);
+        mpSceneRenderer->setRenderMode(PolarizingFilterRendererSceneRenderer::Mode::All);
         mpSceneRenderer->renderScene(pContext);
     }
     pContext->flush();
@@ -337,13 +346,13 @@ void PolarizingFilterRenderer::lightingPass(RenderContext* pContext, Fbo* pTarge
 
 void PolarizingFilterRenderer::renderOpaqueObjects(RenderContext* pContext)
 {
-    mpSceneRenderer->setRenderMode(ForwardRendererSceneRenderer::Mode::Opaque);
+    mpSceneRenderer->setRenderMode(PolarizingFilterRendererSceneRenderer::Mode::Opaque);
     mpSceneRenderer->renderScene(pContext);
 }
 
 void PolarizingFilterRenderer::renderTransparentObjects(RenderContext* pContext)
 {
-    mpSceneRenderer->setRenderMode(ForwardRendererSceneRenderer::Mode::Transparent);
+    mpSceneRenderer->setRenderMode(PolarizingFilterRendererSceneRenderer::Mode::Transparent);
     mpState->setBlendState(mLightingPass.pAlphaBlendBS);
     mpState->setRasterizerState(mLightingPass.pNoCullRS);
     mpSceneRenderer->renderScene(pContext);

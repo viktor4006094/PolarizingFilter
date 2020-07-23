@@ -33,28 +33,139 @@ __import Helpers;
 __import BRDF;
 __import Lights;
 
-#define M_SQRT2 1.41421356237309504880 // sqrt(2)
-
 layout(binding = 0) cbuffer PerFrameCB : register(b0)
 {
-    CsmData  gCsmData;
+    CsmData gCsmData;
     float4x4 camVpAtLastCsmUpdate;
-    float2   gRenderTargetDim;
-    float    gOpacityScale;
+    float2 gRenderTargetDim;
+    float gOpacityScale;
 
     float gPolarizingFilterAngle;
     bool  gEnablePolarizingFilter;
-    bool  gUseExactPsi;
-    
-    bool   gCustomMaterial;
-    float3 gIOR_n;
-    float3 gIOR_k;
-    float  gRoughness;
-    bool   gUseAsDielectric;
 };
 
 layout(set = 1, binding = 1) SamplerState gSampler;
 Texture2D gVisibilityBuffer;
+
+
+
+
+// TODO Move all these functions to their own file
+
+
+//TODO check if minus sign can be avoided
+// Calculate rotation angle between the camera and the surface
+float calcRelativeAngle(float3 cameraX, float3 N, float3 V)
+{
+    float3 surfaceX = normalize(cross(N, V));
+    float dotX = dot(surfaceX, cameraX);
+    float detX = dot(V, cross(surfaceX, cameraX)); // TODO double check these
+    return gPolarizingFilterAngle + atan2(detX, dotX);
+}
+
+// R0  - specular color
+// ct  - cos(theta)
+// st2 - sin^2(theta)
+float3 psi_MetalApprox(float3 R0, float ct, float st2)
+{
+    float3 Rb = float3(1.095) - R0;
+    float3 Rg = float3(1.18) - R0;
+    float3 beta  = float3(0.1)/(Rb*Rb*Rb) + 5.4*R0*R0 + float3(1.0);
+    float3 gamma = (0.16*R0*R0)/(Rg*Rg) + 0.35*Rg;
+    
+    float3 psi = (ct*st2)/(beta*ct*ct + gamma*st2*st2);
+    return saturate(psi);
+}
+
+// R0  - specular color
+// ct  - cos(theta)
+// st2 - sin^2(theta)
+float psi_DielectricExact(float R0, float ct, float st2)
+{
+    float n = (1.0 + sqrt(R0))/(1.0 - sqrt(R0));
+    float c = n*n - st2;
+
+    float psi = (2.0*sqrt(c)*ct*st2)/(c*ct*ct + st2*st2);
+
+    return saturate(psi);
+}
+
+float3 polarizingFilter(ShadingData sd, LightSample ls, float3 cameraX)
+{
+    float3 H = normalize(sd.V + ls.L);
+    float st  = length(cross(ls.L, H)); // sin(theta)
+    float st2 = st*st;                  // sin^2(theta)
+    float angle = calcRelativeAngle(cameraX, H, sd.V);
+
+    float3 psi;
+    if (sd.metalness > 0.5) {
+        psi = psi_MetalApprox(sd.specular, ls.LdotH, st2);
+    } else {
+        psi = float3(psi_DielectricExact(sd.specular.r, ls.LdotH, st2));
+    }
+
+    return (cos(2.0*angle)*psi + float3(1.0));
+}
+
+
+//// Normal light sources ////
+ShadingResult evalMaterialWithFilter(ShadingData sd, LightData light, float shadowFactor, float3 cameraX)
+{
+    ShadingResult sr = initShadingResult();
+    LightSample ls = evalLight(light, sd);
+
+    // If the light doesn't hit the surface or we are viewing the surface from the back, return
+    if(ls.NdotL <= 0) return sr;
+    sd.NdotV = saturate(sd.NdotV);
+
+    // Calculate the diffuse term
+    sr.diffuseBrdf = saturate(evalDiffuseBrdf(sd, ls));
+    sr.diffuse = ls.diffuse * sr.diffuseBrdf * ls.NdotL;
+    sr.color.rgb = sr.diffuse;
+    sr.color.a = sd.opacity;
+
+    // Calculate the specular term
+    sr.specularBrdf = saturate(evalSpecularBrdf(sd, ls));
+    sr.specular = ls.specular * sr.specularBrdf * ls.NdotL;
+
+    // Apply polarizing filter
+    if (gEnablePolarizingFilter) {
+        float3 filter = polarizingFilter(sd, ls, cameraX);
+        sr.specular *= filter;
+    }
+
+    sr.color.rgb += sr.specular;
+
+    // Apply the shadow factor
+    sr.color.rgb *= shadowFactor;
+
+    return sr;
+}
+
+//// Light probes ////
+ShadingResult evalMaterialWithFilter(ShadingData sd, LightProbeData probe, float3 cameraX)
+{
+    ShadingResult sr = initShadingResult();
+    LightSample ls = evalLightProbe(probe, sd);
+
+    sr.diffuse = ls.diffuse;
+    sr.color.rgb = sr.diffuse;
+    sr.specular = ls.specular;
+
+    // Apply polarizing filter
+    if (gEnablePolarizingFilter) {
+        float3 filter = polarizingFilter(sd, ls, cameraX);
+        sr.specular *= filter;
+    }
+    
+    sr.color.rgb += sr.specular;
+
+    return sr;
+}
+
+
+
+
 
 struct MainVsOut
 {
@@ -84,230 +195,45 @@ struct PsOut
 #endif
 };
 
-
-
-
-
-
-// TODO Move all these functions to their own file
-
-//TODO remove this function maybe?
-// Get the normalized reference x vector from normalized y and z vectors
-float3 computeX(float3 y, float3 z)
-{
-    return normalize(cross(y, z));
-}
-
-//TODO get rid of tan, move out all common stuff
-
-float3 SpecularFromIOR(float3 n, float3 k) {
-    float3 A = (n - float3(1.0));
-    float3 B = (n + float3(1.0));
-
-    return saturate((A*A + k*k)/(B*B + k*k));
-}
-
-float3 psi_Exact(float3 n, float3 k, float ct, float st2)
-{
-    float3 n2 = n*n;
-    float3 k2 = k*k;
-
-    float3 c = n2 - k2 - float3(st2);
-    float3 h = sqrt(c*c + 4.0*n2*k2);
-    float3 g = sqrt(h + c);
-
-    return saturate( ((M_SQRT2*ct*st2)*g)/((ct*ct)*h + float3(st2*st2)) );
-}
-
-
-float3 psi_MetalApprox(float3 R0, float ct, float st2)
-{
-    float3 Rb = float3(1.095) - R0;
-    float3 Rg = float3(1.18) - R0;
-    float3 beta  = float3(0.1)/(Rb*Rb*Rb) + 5.4*R0*R0 + float3(1.0);
-    float3 gamma = (0.16*R0*R0)/(Rg*Rg) + 0.35*Rg;
-    
-    float3 psi = (ct*st2)/(beta*ct*ct + gamma*st2*st2);
-    return saturate(psi);
-}
-
-// R0  - specular color
-// ct  - cos(theta)
-// st2 - sin^2(theta)
-float psi_DielectricExact(float R0, float ct, float st2)
-{
-    float n = (1.0 + sqrt(R0))/(1.0 - sqrt(R0));
-    float c = n*n - st2;
-
-    float psi = (2.0*sqrt(c)*ct*st2)/(c*ct*ct + st2*st2);
-
-    return saturate(psi);
-}
-
-
-// Assuming that all dilectrics have R0 = 0.04 i.e., n = 1.5
-float psi_DielectricOneFive(float ct, float st2)
-{
-    float e   = 2.25 - st2;
-
-    return saturate( (2.0*sqrt(e)*ct*st2)/(e*ct*ct + st2*st2) );
-}
-
-//TODO check if minus sign can be avoided
-// Calculate rotation angle between the camera and the surface
-float calcRelativeAngle(float3 cameraX, float3 N, float3 V)
-{
-    float3 surfaceX = computeX(N, V);
-    float dotX = dot(surfaceX, cameraX);
-    float detX = dot(V, cross(surfaceX, cameraX)); // TODO double check these
-    return gPolarizingFilterAngle + atan2(detX, dotX);
-}
-
-
-float3 polarizingFilter(ShadingData sd, LightSample ls, float3 cameraX, bool useExact)
-{
-    float3 H     = normalize(sd.V + ls.L);
-    float  angle = calcRelativeAngle(cameraX, H, sd.V);
-    float st  = length(cross(ls.L, H)); // sin(theta)
-    float st2 = st*st;                  // sin^2(theta)
-    
-    // Cheaper
-    float3 psi;
-    if (gUseExactPsi || useExact) {
-        psi = psi_Exact(gIOR_n, gIOR_k, ls.LdotH, st2);
-    } else if (sd.metalness > 0.5) {
-        psi = psi_MetalApprox(sd.specular, ls.LdotH, st2);
-    } else {
-        psi = float3(psi_DielectricExact(sd.specular.r, ls.LdotH, st2));
-    }
-
-    return (cos(2.0*angle)*psi + float3(1.0));
-}
-
-
-//// Normal light sources ////
-ShadingResult evalMaterialWithFilter(ShadingData sd, LightData light, float shadowFactor, float3 cameraX, bool useExact)
-{
-    ShadingResult sr = initShadingResult();
-    LightSample ls = evalLight(light, sd);
-
-    // If the light doesn't hit the surface or we are viewing the surface from the back, return
-    if(ls.NdotL <= 0) return sr;
-    sd.NdotV = saturate(sd.NdotV);
-
-    // Calculate the diffuse term
-    sr.diffuseBrdf = saturate(evalDiffuseBrdf(sd, ls));
-    sr.diffuse = ls.diffuse * sr.diffuseBrdf * ls.NdotL;
-    sr.color.rgb = sr.diffuse;
-    sr.color.a = sd.opacity;
-
-    // Calculate the specular term
-    sr.specularBrdf = saturate(evalSpecularBrdf(sd, ls));
-    sr.specular = ls.specular * sr.specularBrdf * ls.NdotL;
-
-    // Apply polarizing filter
-    if (gEnablePolarizingFilter) {
-        float3 filter = polarizingFilter(sd, ls, cameraX, useExact);
-        sr.specular *= filter;
-    }
-
-    sr.color.rgb += sr.specular;
-
-    // Apply the shadow factor
-    sr.color.rgb *= shadowFactor;
-
-    return sr;
-}
-
-//// Light probes ////
-ShadingResult evalMaterialWithFilter(ShadingData sd, LightProbeData probe, float3 cameraX, bool useExact)
-{
-    ShadingResult sr = initShadingResult();
-    LightSample ls = evalLightProbe(probe, sd);
-
-    sr.diffuse = ls.diffuse;
-    sr.color.rgb = sr.diffuse;
-    sr.specular = ls.specular;
-
-    // Apply polarizing filter
-    if (gEnablePolarizingFilter) {
-        float3 filter = polarizingFilter(sd, ls, cameraX, useExact);
-        sr.specular *= filter;
-    }
-    
-    sr.color.rgb += sr.specular;
-
-    return sr;
-}
-
-
-
 PsOut ps(MainVsOut vOut, float4 pixelCrd : SV_POSITION)
 {
     PsOut psOut;
 
     ShadingData sd = prepareShadingData(vOut.vsData, gMaterial, gCamera.posW);
 
-
-    
-    if (gCustomMaterial) {
-        sd.diffuse = float3(0.0);
-        sd.specular = SpecularFromIOR(gIOR_n, gIOR_k);
-        //sd.specular = gIOR_n;
-        sd.metalness = gUseAsDielectric ? 0.0 : 1.0;
-        sd.linearRoughness = max(0.08, gRoughness); // Clamp the roughness so that the BRDF won't explode
-        sd.roughness = sd.linearRoughness * sd.linearRoughness;
-    }
-    //sd.N = normalize(vOut.vsData.normalW);
-    
     float4 finalColor = float4(0, 0, 0, 1);
-    float4 exactColor = float4(0, 0, 0, 1);
 
     float3 cameraUp = normalize(gCamera.cameraV);
-    float3 cameraX  = computeX(cameraUp, sd.V); // This points to the right //TODO double-check
+    float3 cameraX  = normalize(cross(cameraUp, sd.V)); // This points to the right //TODO double-check
 
     [unroll]
-    for (uint l = 0; l < _LIGHT_COUNT; l++) {
+    for (uint l = 0; l < _LIGHT_COUNT; l++)
+    {
         float shadowFactor = 1;
 #ifdef _ENABLE_SHADOWS
-        if (l == 0) {
+        if (l == 0)
+        {
             shadowFactor = gVisibilityBuffer.Load(int3(vOut.vsData.posH.xy, 0)).r;
             shadowFactor *= sd.opacity;
         }
 #endif
-        finalColor.rgb += evalMaterialWithFilter(sd, gLights[l], shadowFactor, cameraX, false).color.rgb;
-
-        // To compare with
-        exactColor.rgb += evalMaterialWithFilter(sd, gLights[l], shadowFactor, cameraX, true).color.rgb;
-
-        //TODO break loop for performance testing with fewer lights
+        finalColor.rgb += evalMaterialWithFilter(sd, gLights[l], shadowFactor, cameraX).color.rgb;
     }
 
     // Add the emissive component
     finalColor.rgb += sd.emissive;
-    exactColor.rgb += sd.emissive;
 
 #ifdef _ENABLE_TRANSPARENCY
     finalColor.a = sd.opacity * gOpacityScale;
-    exactColor.a = sd.opacity * gOpacityScale;
 #endif
 
 #ifdef _ENABLE_REFLECTIONS
-    finalColor.rgb += evalMaterialWithFilter(sd, gLightProbe, cameraX, false).color.rgb;
-    exactColor.rgb += evalMaterialWithFilter(sd, gLightProbe, cameraX, true).color.rgb;
+    finalColor.rgb += evalMaterialWithFilter(sd, gLightProbe, cameraX).color.rgb;
 #endif
 
     // Add light-map
     finalColor.rgb += sd.diffuse * sd.lightMap.rgb;
-    exactColor.rgb += sd.diffuse * sd.lightMap.rgb;
 
-    if (!gUseExactPsi) {
-        float greyVal = 0.695;
-        //float greyVal = 0.5;
-        //finalColor.rgb = 10.0*(finalColor.rgb - exactColor.rgb) + float3(greyVal, greyVal, greyVal);
-        //finalColor.rgb = float3(greyVal, greyVal, greyVal);
-    }
-    
     psOut.color = finalColor;
     psOut.normal = float4(vOut.vsData.normalW * 0.5f + 0.5f, 1.0f);
 
@@ -319,9 +245,5 @@ PsOut ps(MainVsOut vOut, float4 pixelCrd : SV_POSITION)
     float3 cascadeColor = gVisibilityBuffer.Load(int3(vOut.vsData.posH.xy, 0)).gba;
     psOut.color.rgb *= cascadeColor;
 #endif
-
-    //psOut.color.rgb = normalize(sd.N);
-    //psOut.color.rgb = normalize(vOut.vsData.normalW);
-    
     return psOut;
 }

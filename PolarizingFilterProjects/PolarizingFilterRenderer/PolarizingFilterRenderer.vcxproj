@@ -26,6 +26,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Data\DepthPass.ps.slang" />
+    <None Include="Data\PolarizingFilterRenderer.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Data\ForwardRenderer.slang">

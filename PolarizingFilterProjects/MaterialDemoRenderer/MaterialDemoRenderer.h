@@ -272,8 +272,8 @@ private:
     };
 
     float mOpacityScale = 0.5f;
-    AAMode mAAMode = AAMode::None;
-    uint32_t mMSAASampleCount = 4;
+    AAMode mAAMode = AAMode::MSAA;
+    uint32_t mMSAASampleCount = 8;
     SamplePattern mTAASamplePattern = SamplePattern::Halton;
     void applyAaMode(SampleCallbacks* pSample);
     std::vector<ProgramControl> mControls;

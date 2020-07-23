@@ -152,7 +152,7 @@ private:
     void initControls();
 
     GraphicsState::SharedPtr mpState;
-	ForwardRendererSceneRenderer::SharedPtr mpSceneRenderer;
+	PolarizingFilterRendererSceneRenderer::SharedPtr mpSceneRenderer;
     void loadModel(SampleCallbacks* pSample, const std::string& filename, bool showProgressBar);
     void loadScene(SampleCallbacks* pSample, const std::string& filename, bool showProgressBar);
     void initScene(SampleCallbacks* pSample, Scene::SharedPtr pScene);
@@ -199,19 +199,22 @@ private:
     };
 
     float mOpacityScale = 0.5f;
-    AAMode mAAMode = AAMode::TAA;
-    uint32_t mMSAASampleCount = 4;
+    AAMode mAAMode = AAMode::MSAA;
+    uint32_t mMSAASampleCount = 8;
     SamplePattern mTAASamplePattern = SamplePattern::Halton;
     void applyAaMode(SampleCallbacks* pSample);
     std::vector<ProgramControl> mControls;
     void applyLightingProgramControl(ControlID controlID);
 
-    bool mUseCameraPath = true;
-    void applyCameraPathState();
-    bool mPerMaterialShader = false;
-    bool mEnableDepthPass = true;
-    bool mUseCsSkinning = false;
-    void applyCsSkinningMode();
+    bool  mEnablePolarizingFilter = true;
+    float mPolarizingFilterAngle  = 90.0f;
+
+    bool  mUseCameraPath     = true;
+    void  applyCameraPathState();
+    bool  mPerMaterialShader = false;
+    bool  mEnableDepthPass   = true;
+    bool  mUseCsSkinning     = false;
+    void  applyCsSkinningMode();
     static const std::string skDefaultScene;
 
     void createTaaPatternGenerator(uint32_t fboWidth, uint32_t fboHeight);

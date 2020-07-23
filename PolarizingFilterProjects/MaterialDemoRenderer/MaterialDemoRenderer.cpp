@@ -27,6 +27,9 @@
 ***************************************************************************/
 #include "MaterialDemoRenderer.h"
 
+// pi/180
+#define DEG_TO_RAD 0.01745329238474369049072265625f
+
 //const std::string MaterialDemoRenderer::skDefaultScene = "Arcade/Arcade.fscene";
 const std::string MaterialDemoRenderer::skDefaultScene = "Bistro v4 Update/Bistro_v4/MaterialTest.fscene";
 
@@ -312,7 +315,7 @@ void MaterialDemoRenderer::lightingPass(RenderContext* pContext, Fbo* pTargetFbo
     pCB["gOpacityScale"] = mOpacityScale;
 
     // Polarizing filter
-    pCB["gPolarizingFilterAngle"] = mPolarizingFilterAngle*static_cast<float>(M_PI / 180.0); // radians
+    pCB["gPolarizingFilterAngle"] = -mPolarizingFilterAngle*DEG_TO_RAD;
     pCB["gEnablePolarizingFilter"] = mEnablePolarizingFilter;
     pCB["gUseExactPsi"] = mUseExactPsi;
 
