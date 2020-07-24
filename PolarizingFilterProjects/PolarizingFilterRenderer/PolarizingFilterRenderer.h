@@ -209,6 +209,8 @@ private:
     bool  mEnablePolarizingFilter = true;
     float mPolarizingFilterAngle  = 90.0f;
 
+    bool mHideMenus = false;
+
     bool  mUseCameraPath     = true;
     void  applyCameraPathState();
     bool  mPerMaterialShader = false;

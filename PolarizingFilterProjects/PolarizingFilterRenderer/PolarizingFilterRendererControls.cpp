@@ -161,6 +161,15 @@ void PolarizingFilterRenderer::onGuiRender(SampleCallbacks* pSample, Gui* pGui)
 {
     static const FileDialogFilterVec kImageFilesFilter = { {"bmp"}, {"jpg"}, {"dds"}, {"png"}, {"tiff"}, {"tif"}, {"tga"} };
 
+    float wndW = static_cast<float>(pSample->getCurrentFbo()->getWidth());
+    float wndH = static_cast<float>(pSample->getCurrentFbo()->getHeight());
+
+    pGui->addPolarizationArrow(mPolarizingFilterAngle, wndW, wndH, !mEnablePolarizingFilter);
+
+    if (mHideMenus) {
+        return;
+    }
+
     if (pGui->addButton("Load Model"))
     {
         std::string filename;
@@ -381,5 +390,7 @@ void PolarizingFilterRenderer::onGuiRender(SampleCallbacks* pSample, Gui* pGui)
         {
             applyLightingProgramControl(ControlID::EnableHashedAlpha);
         }
+        
+        //pGui->setWindowOpen("test", false);
     }
 }

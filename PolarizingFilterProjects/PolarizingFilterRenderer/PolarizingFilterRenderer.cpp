@@ -510,6 +510,10 @@ bool PolarizingFilterRenderer::onKeyEvent(SampleCallbacks* pSample, const Keyboa
             mUseCameraPath = !mUseCameraPath;
             applyCameraPathState();
             return true;
+        case KeyboardEvent::Key::M:
+            mHideMenus = !mHideMenus;
+            pSample->toggleGlobalUI(!mHideMenus);
+            return true;
         case KeyboardEvent::Key::O:
             mPerMaterialShader = !mPerMaterialShader;
             mpSceneRenderer->toggleStaticMaterialCompilation(mPerMaterialShader);

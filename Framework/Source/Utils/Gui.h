@@ -417,6 +417,10 @@ namespace Falcor
         */
         void setActiveFont(const std::string& font);
 
+        /** Not the best place for this function but it gets the job done
+        */
+        void addPolarizationArrow(float rotationAngle, float wndWidth, float wndHeight, bool circleOnly);
+
     private:
         Gui() = default;
         void init(float scaleFactor);
