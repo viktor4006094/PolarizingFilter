@@ -579,6 +579,9 @@ int main(int argc, char** argv)
     SampleConfig config;
     config.windowDesc.title = "Falcor Forward Renderer";
     config.windowDesc.resizableWindow = false;
+
+    config.windowDesc.height = 1024;
+    config.windowDesc.width  = 1024;
 #ifdef _WIN32
     Sample::run(config, pRenderer);
 #else

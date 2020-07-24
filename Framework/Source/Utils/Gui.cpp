@@ -1046,7 +1046,7 @@ namespace Falcor
         ImDrawList* draw_list = ImGui::GetOverlayDrawList();
 
         const ImU32 col32 = ImColor(1.f, 1.f, 1.f);
-        const float scale = 2.0f;
+        const float scale = 1.5f;
         const float length = scale * 110.0f;
         const float width  = scale * 3.0f;
         const float ts     = scale * 12.0f; // triangle size
