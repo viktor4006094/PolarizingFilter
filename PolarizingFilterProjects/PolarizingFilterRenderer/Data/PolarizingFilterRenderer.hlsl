@@ -1,5 +1,7 @@
 /***************************************************************************
-# Copyright (c) 2015, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2015, NVIDIA CORPORATION.
+# Copyright (c) 2020, Viktor Enfeldt.
+# All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -48,12 +50,6 @@ layout(set = 1, binding = 1) SamplerState gSampler;
 Texture2D gVisibilityBuffer;
 
 
-
-
-// TODO Move all these functions to their own file
-
-
-//TODO check if minus sign can be avoided
 // Calculate rotation angle between the camera and the surface
 float calcRelativeAngle(float3 cameraX, float3 N, float3 V)
 {
@@ -108,7 +104,7 @@ float3 polarizingFilter(ShadingData sd, LightSample ls, float3 cameraX)
 }
 
 
-//// Normal light sources ////
+//// Point and directional light sources ////
 ShadingResult evalMaterialWithFilter(ShadingData sd, LightData light, float shadowFactor, float3 cameraX)
 {
     ShadingResult sr = initShadingResult();

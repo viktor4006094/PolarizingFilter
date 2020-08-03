@@ -1,5 +1,7 @@
 /***************************************************************************
-# Copyright (c) 2015, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2015, NVIDIA CORPORATION.
+# Copyright (c) 2020, Viktor Enfeldt.
+# All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -31,7 +33,8 @@
 #define DEG_TO_RAD 0.01745329238474369049072265625f
 
 
-const std::string PolarizingFilterRenderer::skDefaultScene = "Arcade/Arcade.fscene";
+//const std::string PolarizingFilterRenderer::skDefaultScene = "Arcade/Arcade.fscene";
+const std::string PolarizingFilterRenderer::skDefaultScene = "SunTemple2/SunTemple/SunTemple.fscene";
 
 void PolarizingFilterRenderer::initDepthPass()
 {
@@ -514,6 +517,10 @@ bool PolarizingFilterRenderer::onKeyEvent(SampleCallbacks* pSample, const Keyboa
             mHideMenus = !mHideMenus;
             pSample->toggleGlobalUI(!mHideMenus);
             return true;
+        case KeyboardEvent::Key::H:
+            gProfileEnabled = true;
+            pSample->freezeTime(false);
+            return true;
         case KeyboardEvent::Key::O:
             mPerMaterialShader = !mPerMaterialShader;
             mpSceneRenderer->toggleStaticMaterialCompilation(mPerMaterialShader);
@@ -580,8 +587,10 @@ int main(int argc, char** argv)
     config.windowDesc.title = "Falcor Forward Renderer";
     config.windowDesc.resizableWindow = false;
 
-    config.windowDesc.height = 1024;
-    config.windowDesc.width  = 1024;
+    //config.windowDesc.height = 1024;
+    //config.windowDesc.width  = 1024;
+    config.windowDesc.height = 1080;
+    config.windowDesc.width  = 1920;
 #ifdef _WIN32
     Sample::run(config, pRenderer);
 #else
