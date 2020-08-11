@@ -419,7 +419,7 @@ namespace Falcor
 
         /** Not the best place for this function but it gets the job done
         */
-        void addPolarizationArrow(float rotationAngle, float wndWidth, float wndHeight, bool circleOnly);
+        void addPolarizationArrow(float rotationAngle, float wndWidth, float wndHeight, bool circleOnly, bool black = false);
 
     private:
         Gui() = default;

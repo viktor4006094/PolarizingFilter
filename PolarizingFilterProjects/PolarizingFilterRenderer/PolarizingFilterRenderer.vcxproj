@@ -29,11 +29,6 @@
     <None Include="Data\PolarizingFilterRenderer.hlsl" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Data\ForwardRenderer.slang">
-      <FileType>Document</FileType>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
     <None Include="Data\ApplyAO.ps.slang">
       <FileType>Document</FileType>
     </None>

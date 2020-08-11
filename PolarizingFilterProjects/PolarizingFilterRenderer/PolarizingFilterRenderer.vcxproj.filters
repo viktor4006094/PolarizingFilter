@@ -21,9 +21,6 @@
     <None Include="Data\DepthPass.ps.slang">
       <Filter>Data</Filter>
     </None>
-    <None Include="Data\ForwardRenderer.slang">
-      <Filter>Data</Filter>
-    </None>
     <None Include="Data\PolarizingFilterRenderer.hlsl">
       <Filter>Data</Filter>
     </None>

@@ -318,7 +318,7 @@ void PolarizingFilterRenderer::lightingPass(RenderContext* pContext, Fbo* pTarge
     pCB["gOpacityScale"] = mOpacityScale;
 
     // Polarizing filter
-    pCB["gPolarizingFilterAngle"] = -mPolarizingFilterAngle*DEG_TO_RAD; // radians
+    pCB["gPolarizingFilterAngle"] = mPolarizingFilterAngle*DEG_TO_RAD; // radians
     pCB["gEnablePolarizingFilter"] = mEnablePolarizingFilter;
 
     if (mControls[ControlID::EnableShadows].enabled)

@@ -32,8 +32,6 @@
 #include "MaterialDemoRendererSceneRenderer.h"
 
 
-//TODO move this to its own file
-
 /**
 Some X Macros to make it easy to add more metals
 
@@ -45,42 +43,36 @@ Arguments
     kr  : IoR k at 680 nm (red)
     kg  : IoR k at 530 nm (green)
     kb  : IoR k at 470 nm (blue)
+    d   : is dielectric
 */
 #define EXPAND( x ) x
 
-#define X_NAME_(name, nr, ng, nb, kr, kg, kb, ...) name,
-#define X_DROP_(name, nr, ng, nb, kr, kg, kb, ...) { MetalPreset::##name, #name },
-#define X_IOR_N_(name, nr, ng, nb, kr, kg, kb, ...) { nr, ng, nb },
-#define X_IOR_K_(name, nr, ng, nb, kr, kg, kb, ...) { kr, kg, kb },
+#define X_NAME_(name, nr, ng, nb, kr, kg, kb, d, ...) name,
+#define X_DROP_(name, nr, ng, nb, kr, kg, kb, d, ...) { MetalPreset::##name, #name },
+#define X_IOR_N_(name, nr, ng, nb, kr, kg, kb, d, ...) { nr, ng, nb },
+#define X_IOR_K_(name, nr, ng, nb, kr, kg, kb, d, ...) { kr, kg, kb },
+#define X_IS_DIELECTRIC_(name, nr, ng, nb, kr, kg, kb, d, ...) { d },
 
 #define X_NAME(...)  EXPAND( X_NAME_(__VA_ARGS__) )
 #define X_DROP(...)  EXPAND( X_DROP_(__VA_ARGS__) )
 #define X_IOR_N(...) EXPAND( X_IOR_N_(__VA_ARGS__) )
 #define X_IOR_K(...) EXPAND( X_IOR_K_(__VA_ARGS__) )
+#define X_IS_DIELECTRIC(...) EXPAND( X_IS_DIELECTRIC_(__VA_ARGS__) )
 
 // Materials from refractiveindex.info
 #define METAL_TABLE \
-X(Aluminum  , 1.346f, 0.965f, 0.617f, 7.475f, 6.400f, 5.303) \
-X(Brass     , 0.444f, 0.527f, 1.094f, 3.695f, 2.765f, 1.829) \
-X(Copper    , 0.271f, 0.677f, 1.316f, 3.609f, 2.625f, 2.292) \
-X(Gold      , 0.183f, 0.421f, 1.373f, 3.424f, 2.346f, 1.770) \
-X(Iron      , 2.911f, 2.950f, 2.585f, 3.089f, 2.932f, 2.767) \
-X(Lead      , 1.910f, 1.830f, 1.440f, 3.510f, 3.400f, 3.180) \
-X(Platinum  , 2.376f, 2.085f, 1.845f, 4.266f, 3.715f, 3.137) \
-X(Silver    , 0.159f, 0.145f, 0.135f, 3.929f, 3.190f, 2.381) \
-X(Titanium  , 2.741f, 2.542f, 2.267f, 3.814f, 3.435f, 3.039) \
-X(Glass     , 1.521f, 1.525f, 1.532f, 0.000f, 0.000f, 0.000) \
-X(Plastic   , 1.579f, 1.589f, 1.608f, 0.000f, 0.000f, 0.000)
+X(Aluminum  , 1.346f, 0.965f, 0.617f, 7.475f, 6.400f, 5.303, false) \
+X(Brass     , 0.444f, 0.527f, 1.094f, 3.695f, 2.765f, 1.829, false) \
+X(Copper    , 0.271f, 0.677f, 1.316f, 3.609f, 2.625f, 2.292, false) \
+X(Gold      , 0.183f, 0.421f, 1.373f, 3.424f, 2.346f, 1.770, false) \
+X(Iron      , 2.911f, 2.950f, 2.585f, 3.089f, 2.932f, 2.767, false) \
+X(Lead      , 1.910f, 1.830f, 1.440f, 3.510f, 3.400f, 3.180, false) \
+X(Platinum  , 2.376f, 2.085f, 1.845f, 4.266f, 3.715f, 3.137, false) \
+X(Silver    , 0.159f, 0.145f, 0.135f, 3.929f, 3.190f, 2.381, false) \
+X(Titanium  , 2.741f, 2.542f, 2.267f, 3.814f, 3.435f, 3.039, false) \
+X(Glass     , 1.521f, 1.525f, 1.532f, 0.000f, 0.000f, 0.000, true ) \
+X(Plastic   , 1.579f, 1.589f, 1.608f, 0.000f, 0.000f, 0.000, true )
 
-
-//OLD VER
-//X(Aluminium, 1.7680f  , 0.93029f , 0.70362f , 7.9819f, 6.3965f, 5.6953f) \
-//X(Brass,     0.44400f , 0.57300f , 0.90000f , 3.9430f, 2.5680f, 1.9570f) \
-//X(Copper,    0.22905f , 0.82310f , 1.2438f  , 3.9073f, 2.4763f, 2.2880f) \
-//X(Gold,      0.13544f , 0.55758f , 1.3148f  , 3.8820f, 2.2039f, 1.8534f) \
-//X(Iron,      2.8920f  , 2.8889f  , 2.6660f  , 3.1420f, 2.9164f, 2.8175f) \
-//X(Platium,   2.4710f  , 2.0332f  , 1.8906f  , 4.4177f, 3.6000f, 3.2520f) \
-//X(Silver,    0.045444f, 0.053285f, 0.049317f, 4.6447f, 3.4101f, 2.8545f)
 
 using namespace Falcor;
 
@@ -116,6 +108,10 @@ private:
 
 #define X(...) X_IOR_K(__VA_ARGS__)
     glm::vec3 mMetalPresetsK[MetalPreset::NUM_METALS] = { METAL_TABLE };
+#undef X
+
+#define X(...) X_IS_DIELECTRIC(__VA_ARGS__)
+    bool mMaterialIsDielectric[MetalPreset::NUM_METALS] = { METAL_TABLE };
 #undef X
 
     Fbo::SharedPtr mpMainFbo;
@@ -284,10 +280,11 @@ private:
     // Polarizing Filter
     bool  mEnablePolarizingFilter = true;
     float mPolarizingFilterAngle  = 90.0f;
-    bool  mUseExactPsi            = false;
+
+    bool  mUseExactPsi = false;
+    bool  mShowDiff    = false;
 
     // Material
-    bool      mUseMaterial       = true;
     bool      mUseAsDielectric   = false;
     float     mMaterialRoughness = 0.08f;
 

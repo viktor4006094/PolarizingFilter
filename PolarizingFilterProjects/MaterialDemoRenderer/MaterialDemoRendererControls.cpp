@@ -169,8 +169,13 @@ void MaterialDemoRenderer::onGuiRender(SampleCallbacks* pSample, Gui* pGui)
     auto setMaterialPreset = [&, this](uint32_t selected) {
         mMetalIoRn = mMetalPresetsN[selected];
         mMetalIoRk = mMetalPresetsK[selected];
+        mUseAsDielectric = mMaterialIsDielectric[selected];
     };
 
+    float wndW = static_cast<float>(pSample->getCurrentFbo()->getWidth());
+    float wndH = static_cast<float>(pSample->getCurrentFbo()->getHeight());
+
+    pGui->addPolarizationArrow(mPolarizingFilterAngle, wndW, wndH, !mEnablePolarizingFilter, true);
 
     if (pGui->addButton("Load Model"))
     {
@@ -244,15 +249,19 @@ void MaterialDemoRenderer::onGuiRender(SampleCallbacks* pSample, Gui* pGui)
         if (pGui->beginGroup("Polarizing Filter", true))
         {
             pGui->addCheckBox("Enable", mEnablePolarizingFilter);
-            pGui->addFloatSlider("Filter Angle", mPolarizingFilterAngle, 0.f, 180.f, false, "%.1f");
-            pGui->addCheckBox("Exact version", mUseExactPsi);
+            if (mEnablePolarizingFilter) {
+                pGui->addFloatSlider("Filter angle", mPolarizingFilterAngle, 0.f, 180.f, false, "%.1f");
+            }
+            if (!mShowDiff) {
+                pGui->addCheckBox("Reference version", mUseExactPsi);
+            }
+            pGui->addCheckBox("Show difference", mShowDiff);
 
             pGui->endGroup();
         }
 
         if (pGui->beginGroup("Custom Material", true))
         {
-            pGui->addCheckBox("Use material", mUseMaterial);
 
             if (pGui->addDropdown("Presets", mMetalPresets, mSelectedMetal))
             {
@@ -262,7 +271,9 @@ void MaterialDemoRenderer::onGuiRender(SampleCallbacks* pSample, Gui* pGui)
             pGui->addFloat3Var("IoR n", mMetalIoRn);
             pGui->addFloat3Var("IoR k", mMetalIoRk);
             pGui->addFloatSlider("Roughness", mMaterialRoughness, 0.08f, 1.f, false, "%.2f");
-            pGui->addCheckBox("Use as dielectric", mUseAsDielectric);
+            if (!mUseExactPsi || mShowDiff) {
+                pGui->addCheckBox("Use as dielectric", mUseAsDielectric);
+            }
 
             pGui->endGroup();
         }

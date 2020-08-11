@@ -244,7 +244,7 @@ void PolarizingFilterRenderer::onGuiRender(SampleCallbacks* pSample, Gui* pGui)
         if (pGui->beginGroup("Polarizing Filter", true)) {
             pGui->addCheckBox("Enable", mEnablePolarizingFilter);
             if (mEnablePolarizingFilter) {
-                pGui->addFloatSlider("Filter Angle", mPolarizingFilterAngle, 0.f, 180.f, false, "%.1f");
+                pGui->addFloatSlider("Filter angle", mPolarizingFilterAngle, 0.f, 180.f, false, "%.1f");
             }
 
             pGui->endGroup();

@@ -126,7 +126,6 @@ void MaterialDemoRenderer::initScene(SampleCallbacks* pSample, Scene::SharedPtr 
         // Create a directional light
         DirectionalLight::SharedPtr pDirLight = DirectionalLight::create();
         pDirLight->setWorldDirection(vec3(-0.189f, -0.861f, -0.471f));
-        //pDirLight->setIntensity(vec3(1, 1, 0.985f) * 10.0f);
         pDirLight->setIntensity(vec3(0.f, 0.f, 0.f));
         pDirLight->setName("DirLight");
         pScene->addLight(pDirLight);
@@ -317,12 +316,12 @@ void MaterialDemoRenderer::lightingPass(RenderContext* pContext, Fbo* pTargetFbo
     pCB["gOpacityScale"] = mOpacityScale;
 
     // Polarizing filter
-    pCB["gPolarizingFilterAngle"] = -mPolarizingFilterAngle*DEG_TO_RAD;
+    pCB["gPolarizingFilterAngle"] = mPolarizingFilterAngle*DEG_TO_RAD;
     pCB["gEnablePolarizingFilter"] = mEnablePolarizingFilter;
     pCB["gUseExactPsi"] = mUseExactPsi;
+    pCB["gShowDiff"] = mShowDiff;
 
     // Materials
-    pCB["gCustomMaterial"] = mUseMaterial;
     pCB["gIOR_n"] = mMetalIoRn;
     pCB["gIOR_k"] = mMetalIoRk;
     pCB["gRoughness"] = mMaterialRoughness;
@@ -593,8 +592,8 @@ int main(int argc, char** argv)
     config.windowDesc.title = "Material Demo Renderer";
     config.windowDesc.resizableWindow = false;
 
-    config.windowDesc.height = 512;
-    config.windowDesc.width  = 512;
+    config.windowDesc.height = 1024;
+    config.windowDesc.width  = 1024;
 #ifdef _WIN32
     Sample::run(config, pRenderer);
 #else

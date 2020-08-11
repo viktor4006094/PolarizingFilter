@@ -1041,17 +1041,17 @@ namespace Falcor
         it->second = isOpen;
     }
 
-    void Gui::addPolarizationArrow(float rotationAngle, float wndWidth, float wndHeight, bool circleOnly)
+    void Gui::addPolarizationArrow(float rotationAngle, float wndWidth, float wndHeight, bool circleOnly, bool black)
     {
         ImDrawList* draw_list = ImGui::GetOverlayDrawList();
 
-        const ImU32 col32 = ImColor(1.f, 1.f, 1.f);
+        const ImU32 col32 = black ? ImColor(0.f, 0.f, 0.f) : ImColor(1.f, 1.f, 1.f);
         const float scale = 1.5f;
         const float length = scale * 110.0f;
         const float width  = scale * 3.0f;
         const float ts     = scale * 12.0f; // triangle size
         const ImVec2 mid = ImVec2(wndWidth - 100.f - 50.f * scale, wndHeight - 100.f - 50.f * scale);
-        const float a = rotationAngle*static_cast<float>(M_PI/180.0);
+        const float a = -rotationAngle*static_cast<float>(M_PI/180.0);
 
         auto rotatedVec2 = [&](float vx, float vy) {
             ImVec2 rotated = ImVec2(vx - mid.x, vy - mid.y);
