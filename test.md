@@ -6,8 +6,13 @@ This repository hosts the source code of the example application used in the art
 Polarizing Filter Demonstration
 ----
 <p align="center">
-| <img src="GitHubMedia/OBistroBush30.png" width="300"/> | <img src="GitHubMedia/OBistroBush30.png" width="300"/> | <img src="GitHubMedia/OBistroBush30.png" width="300"/> |
+
+|   |   |   |
+|:-:|:-:|:-:|
+| <img src="GitHubMedia/OBistroBush30.png" width="300"/><br />Unfiltered| <img src="GitHubMedia/OBistroBush30.png" width="300"/><br />Filter Angle = | <img src="GitHubMedia/OBistroBush30.png" width="300"/><br />Filter Angle = |
 | Unfiltered | Filter angle =  | Filter angle =  |
+| Unfiltered | Filter angle =  | Filter angle =  |
+
 </p>
 
 Projects and Settings
