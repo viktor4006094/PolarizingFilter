@@ -584,7 +584,7 @@ int main(int argc, char** argv)
 {
     PolarizingFilterRenderer::UniquePtr pRenderer = std::make_unique<PolarizingFilterRenderer>();
     SampleConfig config;
-    config.windowDesc.title = "Falcor Forward Renderer";
+    config.windowDesc.title = "Polarizing Filter Renderer";
     config.windowDesc.resizableWindow = false;
 
     //config.windowDesc.height = 1024;

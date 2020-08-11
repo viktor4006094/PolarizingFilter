@@ -201,7 +201,7 @@ private:
     };
 
     float mOpacityScale = 0.5f;
-    AAMode mAAMode = AAMode::MSAA;
+    AAMode mAAMode = AAMode::None;
     uint32_t mMSAASampleCount = 8;
     SamplePattern mTAASamplePattern = SamplePattern::Halton;
     void applyAaMode(SampleCallbacks* pSample);
@@ -215,7 +215,7 @@ private:
 
     bool  mUseCameraPath     = true;
     void  applyCameraPathState();
-    bool  mPerMaterialShader = false;
+    bool  mPerMaterialShader = true;
     bool  mEnableDepthPass   = true;
     bool  mUseCsSkinning     = false;
     void  applyCsSkinningMode();
