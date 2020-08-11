@@ -43,7 +43,6 @@ void PolarizingFilterRenderer::initDepthPass()
 
 void PolarizingFilterRenderer::initLightingPass()
 {
-    //mLightingPass.pProgram = GraphicsProgram::createFromFile("ForwardRenderer.slang", "vs", "ps");
     mLightingPass.pProgram = GraphicsProgram::createFromFile("PolarizingFilterRenderer.hlsl", "vs", "ps");
     mLightingPass.pProgram->addDefine("_LIGHT_COUNT", std::to_string(mpSceneRenderer->getScene()->getLightCount()));
     initControls();
@@ -586,8 +585,6 @@ int main(int argc, char** argv)
     config.windowDesc.title = "Polarizing Filter Renderer";
     config.windowDesc.resizableWindow = false;
 
-    //config.windowDesc.height = 1024;
-    //config.windowDesc.width  = 1024;
     config.windowDesc.height = 1080;
     config.windowDesc.width  = 1920;
 #ifdef _WIN32

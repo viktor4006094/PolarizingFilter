@@ -66,6 +66,17 @@ float3 SpecularFromIOR(float3 n, float3 k) {
     return saturate((t1*t1 + k*k)/(t2*t2 + k*k));
 }
 
+//// Polarizing filter functions ////
+
+// Calculate rotation angle between the camera and the surface
+float calcRelativeAngle(float3 cameraX, float3 N, float3 V)
+{
+    float3 surfaceX = normalize(cross(N, V));
+    float dotX = dot(surfaceX, cameraX);
+    float detX = dot(V, cross(surfaceX, cameraX));
+    return gPolarizingFilterAngle + atan2(detX, dotX);
+}
+
 // n   - simple refractive index
 // k   - extinction coefficient
 // ct  - cos(theta)
@@ -80,15 +91,6 @@ float3 psi_Exact(float3 n, float3 k, float ct, float st2)
     float3 g = sqrt(h + c);
 
     return saturate( ((M_SQRT2*ct*st2)*g)/((ct*ct)*h + float3(st2*st2)) );
-}
-
-// Calculate rotation angle between the camera and the surface
-float calcRelativeAngle(float3 cameraX, float3 N, float3 V)
-{
-    float3 surfaceX = normalize(cross(N, V));
-    float dotX = dot(surfaceX, cameraX);
-    float detX = dot(V, cross(surfaceX, cameraX));
-    return gPolarizingFilterAngle + atan2(detX, dotX);
 }
 
 // R0  - specular color
@@ -125,6 +127,7 @@ float psi_DielectricOneFive(float ct, float st2)
     return saturate( (2.0*sqrt(e)*ct*st2)/(e*ct*ct + st2*st2) );
 }
 
+// cameraX - normalized vector that points to the right from the viewer's perspective
 float3 polarizingFilter(ShadingData sd, LightSample ls, float3 cameraX, bool useExact)
 {
     float3 H     = normalize(sd.V + ls.L);
@@ -144,8 +147,9 @@ float3 polarizingFilter(ShadingData sd, LightSample ls, float3 cameraX, bool use
     return (cos(2.0*angle)*psi + float3(1.0));
 }
 
+//// Material evaluation functions ////
 
-//// Normal light sources ////
+// Normal light sources
 ShadingResult evalMaterialWithFilter(ShadingData sd, LightData light, float shadowFactor, float3 cameraX, bool useExact)
 {
     ShadingResult sr = initShadingResult();
@@ -178,7 +182,7 @@ ShadingResult evalMaterialWithFilter(ShadingData sd, LightData light, float shad
     return sr;
 }
 
-//// Light probes ////
+// Light probes
 ShadingResult evalMaterialWithFilter(ShadingData sd, LightProbeData probe, float3 cameraX, bool useExact)
 {
     ShadingResult sr = initShadingResult();
@@ -198,6 +202,7 @@ ShadingResult evalMaterialWithFilter(ShadingData sd, LightProbeData probe, float
     return sr;
 }
 
+//// Vertex and Pixel shader entry points ////
 
 struct MainVsOut
 {
@@ -233,7 +238,7 @@ PsOut ps(MainVsOut vOut, float4 pixelCrd : SV_POSITION)
 
     ShadingData sd = prepareShadingData(vOut.vsData, gMaterial, gCamera.posW);
 
-    // over-write material data with custom material
+    // overwrite material data with custom material
     sd.diffuse = float3(0.0);
     sd.specular = SpecularFromIOR(gIOR_n, gIOR_k);
     sd.metalness = gUseAsDielectric ? 0.0 : 1.0;
@@ -244,7 +249,7 @@ PsOut ps(MainVsOut vOut, float4 pixelCrd : SV_POSITION)
     float4 correctColor = float4(0, 0, 0, 1);
 
     float3 cameraUp = normalize(gCamera.cameraV);
-    float3 cameraX  = normalize(cross(cameraUp, sd.V)); // This points to the right //TODO double-check
+    float3 cameraX  = normalize(cross(cameraUp, sd.V));
 
     [unroll]
     for (uint l = 0; l < _LIGHT_COUNT; l++) {

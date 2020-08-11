@@ -392,7 +392,5 @@ void PolarizingFilterRenderer::onGuiRender(SampleCallbacks* pSample, Gui* pGui)
         {
             applyLightingProgramControl(ControlID::EnableHashedAlpha);
         }
-        
-        //pGui->setWindowOpen("test", false);
     }
 }
