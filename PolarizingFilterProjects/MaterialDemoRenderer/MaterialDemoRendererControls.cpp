@@ -167,8 +167,8 @@ void MaterialDemoRenderer::onGuiRender(SampleCallbacks* pSample, Gui* pGui)
     // Helper lambdas
     //
     auto setMaterialPreset = [&, this](uint32_t selected) {
-        mMetalIoRn = mMetalPresetsN[selected];
-        mMetalIoRk = mMetalPresetsK[selected];
+        mMaterialIoRn = mMaterialPresetsN[selected];
+        mMaterialIoRk = mMaterialPresetsK[selected];
         mUseAsDielectric = mMaterialIsDielectric[selected];
     };
 
@@ -252,10 +252,10 @@ void MaterialDemoRenderer::onGuiRender(SampleCallbacks* pSample, Gui* pGui)
             if (mEnablePolarizingFilter) {
                 pGui->addFloatSlider("Filter angle", mPolarizingFilterAngle, 0.f, 180.f, false, "%.1f");
             }
+            pGui->addCheckBox("Show difference", mShowDiff);
             if (!mShowDiff) {
                 pGui->addCheckBox("Reference version", mUseExactPsi);
             }
-            pGui->addCheckBox("Show difference", mShowDiff);
 
             pGui->endGroup();
         }
@@ -263,13 +263,13 @@ void MaterialDemoRenderer::onGuiRender(SampleCallbacks* pSample, Gui* pGui)
         if (pGui->beginGroup("Custom Material", true))
         {
 
-            if (pGui->addDropdown("Presets", mMetalPresets, mSelectedMetal))
+            if (pGui->addDropdown("Presets", mMaterialPresets, mSelectedMetal))
             {
                 setMaterialPreset(mSelectedMetal);
             }
 
-            pGui->addFloat3Var("IoR n", mMetalIoRn);
-            pGui->addFloat3Var("IoR k", mMetalIoRk);
+            pGui->addFloat3Var("IoR n", mMaterialIoRn);
+            pGui->addFloat3Var("IoR k", mMaterialIoRk);
             pGui->addFloatSlider("Roughness", mMaterialRoughness, 0.08f, 1.f, false, "%.2f");
             if (!mUseExactPsi || mShowDiff) {
                 pGui->addCheckBox("Use as dielectric", mUseAsDielectric);

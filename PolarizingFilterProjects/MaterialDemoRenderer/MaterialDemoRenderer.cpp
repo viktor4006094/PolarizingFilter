@@ -322,8 +322,8 @@ void MaterialDemoRenderer::lightingPass(RenderContext* pContext, Fbo* pTargetFbo
     pCB["gShowDiff"] = mShowDiff;
 
     // Materials
-    pCB["gIOR_n"] = mMetalIoRn;
-    pCB["gIOR_k"] = mMetalIoRk;
+    pCB["gIOR_n"] = mMaterialIoRn;
+    pCB["gIOR_k"] = mMaterialIoRk;
     pCB["gRoughness"] = mMaterialRoughness;
     pCB["gUseAsDielectric"] = mUseAsDielectric;
 
@@ -513,7 +513,7 @@ bool MaterialDemoRenderer::onKeyEvent(SampleCallbacks* pSample, const KeyboardEv
 {
     if (mpSceneRenderer && keyEvent.type == KeyboardEvent::Type::KeyPressed)
     {
-        std::string fileName = mMetalPresets[mSelectedMetal].label + (mUseExactPsi ? "Exact" : "Approx");
+        std::string fileName = mMaterialPresets[mSelectedMetal].label + (mUseExactPsi ? "Exact" : "Approx");
         //std::string fileName = mMetalPresets[mSelectedMetal].label + "Unfiltered";
         //std::string fileName = mMetalPresets[mSelectedMetal].label + "Diff";
 

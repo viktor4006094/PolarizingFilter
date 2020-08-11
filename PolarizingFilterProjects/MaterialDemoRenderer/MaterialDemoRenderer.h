@@ -48,7 +48,7 @@ Arguments
 #define EXPAND( x ) x
 
 #define X_NAME_(name, nr, ng, nb, kr, kg, kb, d, ...) name,
-#define X_DROP_(name, nr, ng, nb, kr, kg, kb, d, ...) { MetalPreset::##name, #name },
+#define X_DROP_(name, nr, ng, nb, kr, kg, kb, d, ...) { MaterialPreset::##name, #name },
 #define X_IOR_N_(name, nr, ng, nb, kr, kg, kb, d, ...) { nr, ng, nb },
 #define X_IOR_K_(name, nr, ng, nb, kr, kg, kb, d, ...) { kr, kg, kb },
 #define X_IS_DIELECTRIC_(name, nr, ng, nb, kr, kg, kb, d, ...) { d },
@@ -60,7 +60,7 @@ Arguments
 #define X_IS_DIELECTRIC(...) EXPAND( X_IS_DIELECTRIC_(__VA_ARGS__) )
 
 // Materials from refractiveindex.info
-#define METAL_TABLE \
+#define MATERIAL_TABLE \
 X(Aluminum  , 1.346f, 0.965f, 0.617f, 7.475f, 6.400f, 5.303, false) \
 X(Brass     , 0.444f, 0.527f, 1.094f, 3.695f, 2.765f, 1.829, false) \
 X(Copper    , 0.271f, 0.677f, 1.316f, 3.609f, 2.625f, 2.292, false) \
@@ -88,30 +88,30 @@ public:
     void onDroppedFile(SampleCallbacks* pSample, const std::string& filename) override;
 private:
 #define X(...) X_NAME(__VA_ARGS__)
-    enum MetalPreset : uint32_t
+    enum MaterialPreset : uint32_t
     {
-        METAL_TABLE
-        NUM_METALS
+        MATERIAL_TABLE
+        NUM_MATERIALS
     };
 #undef X
 
 #define X(...) X_DROP(__VA_ARGS__)
-    Falcor::Gui::DropdownList mMetalPresets =
+    Falcor::Gui::DropdownList mMaterialPresets =
     {
-        METAL_TABLE
+        MATERIAL_TABLE
     };
 #undef X
 
 #define X(...) X_IOR_N(__VA_ARGS__)
-    glm::vec3 mMetalPresetsN[MetalPreset::NUM_METALS] = { METAL_TABLE };
+    glm::vec3 mMaterialPresetsN[MaterialPreset::NUM_MATERIALS] = { MATERIAL_TABLE };
 #undef X
 
 #define X(...) X_IOR_K(__VA_ARGS__)
-    glm::vec3 mMetalPresetsK[MetalPreset::NUM_METALS] = { METAL_TABLE };
+    glm::vec3 mMaterialPresetsK[MaterialPreset::NUM_MATERIALS] = { MATERIAL_TABLE };
 #undef X
 
 #define X(...) X_IS_DIELECTRIC(__VA_ARGS__)
-    bool mMaterialIsDielectric[MetalPreset::NUM_METALS] = { METAL_TABLE };
+    bool mMaterialIsDielectric[MaterialPreset::NUM_MATERIALS] = { MATERIAL_TABLE };
 #undef X
 
     Fbo::SharedPtr mpMainFbo;
@@ -287,10 +287,9 @@ private:
     // Material
     bool      mUseAsDielectric   = false;
     float     mMaterialRoughness = 0.08f;
-
-    uint32    mSelectedMetal = MetalPreset::Gold;
-    glm::vec3 mMetalIoRn     = mMetalPresetsN[MetalPreset::Gold];
-    glm::vec3 mMetalIoRk     = mMetalPresetsK[MetalPreset::Gold];
+    uint32    mSelectedMetal = MaterialPreset::Gold;
+    glm::vec3 mMaterialIoRn  = mMaterialPresetsN[MaterialPreset::Gold];
+    glm::vec3 mMaterialIoRk  = mMaterialPresetsK[MaterialPreset::Gold];
 
 
 

@@ -28,8 +28,8 @@ This implmeentation is based on [Nvidia's Falcor Rendering Framework 3.2.2](http
 	- **Settings**
 		- Polarizing Filter
 			- _Filter angle_ - Same as in _PolarizingFilterRenderer_.
+			- _Show difference_ - Visualize the exaggerated difference between the reference version and the approximate version.
 			- _Reference version_ - Use the IOR-based version of the filter instead the approximate version.
-			- _Show difference_ - Visualize the exaggerated difference between the reference version and our specular color version.
 		- Custom Material
 			- _Presets_ - Select material values from a predefined list of materials.
 			- _IoR n_ - The simple refractive index for RGB color channels.
