@@ -515,7 +515,7 @@ bool PolarizingFilterRenderer::onKeyEvent(SampleCallbacks* pSample, const Keyboa
             mHideMenus = !mHideMenus;
             pSample->toggleGlobalUI(!mHideMenus);
             return true;
-        case KeyboardEvent::Key::H:
+        case KeyboardEvent::Key::H: //TODO comment out
             gProfileEnabled = true;
             pSample->freezeTime(false);
             return true;

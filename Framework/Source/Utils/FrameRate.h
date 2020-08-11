@@ -30,6 +30,9 @@
 #include <vector>
 #include "CpuTimer.h"
 
+#include <fstream>
+#include <iomanip>
+
 namespace Falcor
 {
     /** Framerate calculator
@@ -40,6 +43,9 @@ namespace Falcor
         FrameRate()
         {
             mFrameTimes.resize(sFrameWindow);
+#if _PROFILING_LOG == 1
+            mFPSLog.resize(sFPSLogSize);
+#endif
             resetClock();
         }
 
@@ -50,6 +56,9 @@ namespace Falcor
         {
             newFrame();
             mFrameCount = 0;
+#if _PROFILING_LOG == 1
+            mFPSCount = 0;
+#endif
         }
 
         /** Tick the timer.
@@ -59,7 +68,23 @@ namespace Falcor
         {
             mFrameCount++;
             mTimer.update();
-            mFrameTimes[mFrameCount % sFrameWindow] = mTimer.getElapsedTime();
+            float elapsed = mTimer.getElapsedTime();
+            mFrameTimes[mFrameCount % sFrameWindow] = elapsed;
+
+#if _PROFILING_LOG == 1
+            if (gProfileEnabled) {
+                mFPSCount++;
+                mFPSLog[mFPSCount % sFPSLogSize] = (float)(1.f / elapsed);
+
+                if (mFPSCount == sFPSLogSize) {
+                    std::ofstream out("profile_FPS.csv");
+                    out << "fps\n";
+                    for (uint64_t i = 0; i < sFPSLogSize; i++) {
+                        out << std::fixed << std::setprecision(2) << mFPSLog[i] << "\n";
+                    }
+                }
+            }
+#endif
         }
 
         /** Get the time in ms it took to render a frame
@@ -90,11 +115,19 @@ namespace Falcor
         {
             return mFrameCount;
         }
+
     private:
 
         CpuTimer mTimer;
         std::vector<float> mFrameTimes;
         uint64_t mFrameCount;
         static const uint64_t sFrameWindow = 60;
+
+#if _PROFILING_LOG == 1
+        std::vector<float> mFPSLog;
+        uint64_t mFPSCount;
+        static const uint64_t sFPSLogSize = _PROFILING_LOG_BATCH_SIZE;
+#endif
+
     };
 }

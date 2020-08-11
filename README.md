@@ -7,11 +7,11 @@ Polarizing Filter Demonstration
 ----
 <p align="center">
 
-|   |   |   |
-|:-:|:-:|:-:|
-| <img src="GitHubMedia/OTempleBaseU.png" width="300"/><br />unfiltered| <img src="GitHubMedia/OTempleBase160.png" width="300"/><br />filter angle = 160&deg; | <img src="GitHubMedia/OTempleBase90.png" width="300"/><br />filter angle = 90&deg;|
-| <img src="GitHubMedia/OBistroBushU.png" width="300"/><br />unfiltered| <img src="GitHubMedia/OBistroBush120.png" width="300"/><br />filter angle = 120&deg; | <img src="GitHubMedia/OBistroBush30.png" width="300"/><br />filter angle = 30&deg;|
-| <img src="GitHubMedia/OBistroSphereU.png" width="300"/><br />unfiltered| <img src="GitHubMedia/OBistroSphere112.png" width="300"/><br />filter angle = 112&deg; | <img src="GitHubMedia/OBistroSphere0.png" width="300"/><br />filter angle = 0&deg;|
+|                                                                        |                                                                                       |                                                                                    |
+|:----------------------------------------------------------------------:|:-------------------------------------------------------------------------------------:|:----------------------------------------------------------------------------------:|
+| <img src="GitHubMedia/OTempleBaseU.png" width="300"/>  <br />unfiltered| <img src="GitHubMedia/OTempleBase160.png" width="300"/>  <br />filter angle = 160&deg;| <img src="GitHubMedia/OTempleBase90.png" width="300"/> <br />filter angle = 90&deg;|
+| <img src="GitHubMedia/OBistroBushU.png" width="300"/>  <br />unfiltered| <img src="GitHubMedia/OBistroBush120.png" width="300"/>  <br />filter angle = 120&deg;| <img src="GitHubMedia/OBistroBush30.png" width="300"/> <br />filter angle = 30&deg;|
+| <img src="GitHubMedia/OBistroSphereU.png" width="300"/><br />unfiltered| <img src="GitHubMedia/OBistroSphere112.png" width="300"/><br />filter angle = 112&deg;| <img src="GitHubMedia/OBistroSphere0.png" width="300"/><br />filter angle = 0&deg; |
 
 </p>
 
@@ -24,7 +24,7 @@ This implmeentation is based on [Nvidia's Falcor Rendering Framework 3.2.2](http
 	- **Settings**
 		- Polarizing Filter
 			- _Filter angle_ - The counterclockwise rotation angle of the linear polarizing filter in degrees, with `0` repressenting a horizontally angled filter.
-- **_MaterialRenderer_** Can be used to compare the effect of our approximate function with the correct IOR-based function (see the article for more details). All surfaces use the same material in this mode.
+- **_MaterialDemoRenderer_** Can be used to compare the effect of our approximate function with the correct IOR-based function (see the article for more details). All surfaces use the same material in this mode.
 	- **Settings**
 		- Polarizing Filter
 			- _Filter angle_ - Same as in _PolarizingFilterRenderer_.
@@ -60,7 +60,7 @@ TODO
 ```bibtex
 @Misc{EnfeldtPolarizing2020,  
    author = {Enfeldt, Viktor},  
-   title  = {A Polarizing Filter Function For Real-Time Rendering},  
+   title  = {A Polarizing Filter Function for Real-Time Rendering},  
    year   = {2020},  
    month  = {08},  
    url    = {https://github.com/viktor4006094/FresnelPolarizingFilter},    
