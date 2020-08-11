@@ -39,19 +39,16 @@ This implmeentation is based on [Nvidia's Falcor Rendering Framework 3.2.2](http
 
 Polarizing Filter Source Code
 ----
-The HLSL implementation code of the polarizing filter can be found in LINK, see the article for more details.
+The HLSL implementation code of the polarizing filter can be found in [`PolarizingFilterRenderer.hlsl`](PolarizingFilterProjects/PolarizingFilterRenderer/Data/PolarizingFilterRenderer.hlsl), see the article for more details.
 
 Requirements and Installation
 ----
 Follow the installation guide for [Falcor 3.2.2](https://github.com/NVIDIAGameWorks/Falcor/tree/f2b53b1bb9f8433f3c9e2570d2dc90dcd2440415) if you want to build this project. 
 The same restrictions and requirements apply.
 
-Additional test scenes can be downloaded from the [Open Research Content Archive (ORCA)](https://developer.nvidia.com/orca). You might have to edit some path names in the code for them to load correctly.
+The _Sun Temple_ and _Bistro_ test scenes can be downloaded from the [Open Research Content Archive (ORCA)](https://developer.nvidia.com/orca). 
 Scenes can also be created/modified with the included `SceneEditor` project.
 
-Versions
------
-- [`v1.00`](https://github.com/viktor4006094/DegreeProject/releases/tag/v1.00) Version used to run the performance tests in the article
 
 Citation
 --------

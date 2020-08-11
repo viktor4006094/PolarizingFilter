@@ -33,8 +33,7 @@
 #define DEG_TO_RAD 0.01745329238474369049072265625f
 
 
-//const std::string PolarizingFilterRenderer::skDefaultScene = "Arcade/Arcade.fscene";
-const std::string PolarizingFilterRenderer::skDefaultScene = "SunTemple2/SunTemple/SunTemple.fscene";
+const std::string PolarizingFilterRenderer::skDefaultScene = "Arcade/Arcade.fscene";
 
 void PolarizingFilterRenderer::initDepthPass()
 {

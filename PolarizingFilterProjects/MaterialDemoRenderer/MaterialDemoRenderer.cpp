@@ -32,8 +32,7 @@
 // pi/180
 #define DEG_TO_RAD 0.01745329238474369049072265625f
 
-//const std::string MaterialDemoRenderer::skDefaultScene = "Arcade/Arcade.fscene";
-const std::string MaterialDemoRenderer::skDefaultScene = "Bistro v4 Update/Bistro_v4/MaterialTest.fscene";
+const std::string MaterialDemoRenderer::skDefaultScene = "../DemoScenes/MaterialTest.fscene";
 
 void MaterialDemoRenderer::initDepthPass()
 {
