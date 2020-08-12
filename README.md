@@ -65,6 +65,6 @@ TODO
    title  = {A Polarizing Filter Function for Real-Time Rendering},  
    year   = {2020},  
    month  = {08},  
-   url    = {https://github.com/viktor4006094/FresnelPolarizingFilter},    
+   url    = {https://github.com/viktor4006094/PolarizingFilter},    
 }
 ```
