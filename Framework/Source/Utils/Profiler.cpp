@@ -164,7 +164,7 @@ namespace Falcor
                 fileOss << "profile_" << pData->name << "_" << pData->filesWritten++ << ".csv";
                 std::ofstream out(fileOss.str().c_str());
                 out << "cpu, gpu\n";
-                for (int i = 0; i < _PROFILING_LOG_BATCH_SIZE; ++i)
+                for (int i = 5; i < _PROFILING_LOG_BATCH_SIZE; ++i)
                 {
                     out << pData->cpuMs[i] << ", " << pData->gpuMs[i] << "\n";
                 }

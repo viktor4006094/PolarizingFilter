@@ -79,7 +79,7 @@ namespace Falcor
                 if (mFPSCount == sFPSLogSize) {
                     std::ofstream out("profile_FPS.csv");
                     out << "fps\n";
-                    for (uint64_t i = 0; i < sFPSLogSize; i++) {
+                    for (uint64_t i = 5; i < sFPSLogSize; i++) {
                         out << std::fixed << std::setprecision(2) << mFPSLog[i] << "\n";
                     }
                 }

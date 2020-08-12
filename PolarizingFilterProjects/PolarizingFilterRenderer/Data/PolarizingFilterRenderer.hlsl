@@ -129,8 +129,7 @@ ShadingResult evalMaterialWithFilter(ShadingData sd, LightData light, float shad
 
     // Apply polarizing filter
     if (gEnablePolarizingFilter) {
-        float3 filter = polarizingFilter(sd, ls, cameraX);
-        sr.specular *= filter;
+        sr.specular *= polarizingFilter(sd, ls, cameraX);
     }
 
     sr.color.rgb += sr.specular;
@@ -153,8 +152,7 @@ ShadingResult evalMaterialWithFilter(ShadingData sd, LightProbeData probe, float
 
     // Apply polarizing filter
     if (gEnablePolarizingFilter) {
-        float3 filter = polarizingFilter(sd, ls, cameraX);
-        sr.specular *= filter;
+        sr.specular *= polarizingFilter(sd, ls, cameraX);
     }
     
     sr.color.rgb += sr.specular;
