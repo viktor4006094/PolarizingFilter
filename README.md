@@ -1,6 +1,6 @@
 A Polarizing Filter Function for Real-Time Rendering
 ====
-This repository hosts the source code of the example application used in the article _A Polarizing Filter Function for Real-Time Rendering_.
+This repository hosts the source code of the example application used in the article [_A Polarizing Filter Function for Real-Time Rendering_](http://jcgt.org/published/0010/02/03/).
 
 
 Polarizing Filter Demonstration
@@ -53,18 +53,18 @@ Scenes can also be created/modified with the included `SceneEditor` project.
 Citation
 --------
 
-### Article
 ```bibtex
-TODO
-```
-
-### Application
-```bibtex
-@Misc{EnfeldtPolarizing2020,  
-   author = {Enfeldt, Viktor},  
-   title  = {A Polarizing Filter Function for Real-Time Rendering},  
-   year   = {2020},  
-   month  = {08},  
-   url    = {https://github.com/viktor4006094/PolarizingFilter},    
+@article{Enfeldt2021Polarizing,
+  author =       {Viktor Enfeldt and Prashant Goswami}, 
+  title =        {A Polarizing Filter Function for Real-Time Rendering},
+  year =         2021,
+  month =        {June},
+  day =          17,
+  journal =      {Journal of Computer Graphics Techniques (JCGT)},
+  volume =       10,
+  number =       2,
+  pages =        {29--52},
+  url =          {http://jcgt.org/published/0010/02/03/},
+  issn =         {2331-7418}
 }
 ```
