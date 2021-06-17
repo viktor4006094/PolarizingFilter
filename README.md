@@ -55,16 +55,16 @@ Citation
 
 ```bibtex
 @article{Enfeldt2021Polarizing,
-  author =       {Viktor Enfeldt and Prashant Goswami}, 
-  title =        {A Polarizing Filter Function for Real-Time Rendering},
-  year =         2021,
-  month =        {June},
-  day =          17,
-  journal =      {Journal of Computer Graphics Techniques (JCGT)},
-  volume =       10,
-  number =       2,
-  pages =        {29--52},
-  url =          {http://jcgt.org/published/0010/02/03/},
-  issn =         {2331-7418}
+    author  = {Viktor Enfeldt and Prashant Goswami}, 
+    title   = {A Polarizing Filter Function for Real-Time Rendering},
+    year    = 2021,
+    month   = {June},
+    day     = 17,
+    journal = {Journal of Computer Graphics Techniques (JCGT)},
+    volume  = 10,
+    number  = 2,
+    pages   = {29--52},
+    url     = {http://jcgt.org/published/0010/02/03/},
+    issn    = {2331-7418}
 }
 ```
